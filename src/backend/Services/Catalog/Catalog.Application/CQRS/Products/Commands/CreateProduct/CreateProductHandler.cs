@@ -1,5 +1,4 @@
 ﻿using Catalog.Application.Common.Interfaces;
-using Catalog.Application.Data;
 using Catalog.Domain.Entities;
 using MediatR;
 
@@ -7,9 +6,9 @@ namespace Catalog.Application.CQRS.Products.Commands.CreateProduct
 {
     public class CreateProductHandler : IRequestHandler<CreateProductCommand, CreateProductResult>
     {
-        private readonly IApplicationDbContext _dbContext;
+        private readonly ICatalogDbContext _dbContext;
 
-        public CreateProductHandler(IApplicationDbContext _dbContext)
+        public CreateProductHandler(ICatalogDbContext _dbContext)
         {
             this._dbContext = _dbContext;
         }

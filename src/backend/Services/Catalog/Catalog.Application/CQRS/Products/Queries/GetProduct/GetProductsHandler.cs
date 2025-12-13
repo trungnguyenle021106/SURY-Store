@@ -1,5 +1,4 @@
 ﻿using Catalog.Application.Common.Interfaces;
-using Catalog.Application.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,9 +7,9 @@ namespace Catalog.Application.CQRS.Products.Queries.GetProduct
     public class GetProductsHandler
          : IRequestHandler<GetProductsQuery, GetProductsResult>
     {
-        private readonly IApplicationDbContext _dbContext;
+        private readonly ICatalogDbContext _dbContext;
 
-        public GetProductsHandler(IApplicationDbContext _dbContext)
+        public GetProductsHandler(ICatalogDbContext _dbContext)
         {
             this._dbContext = _dbContext;
         }

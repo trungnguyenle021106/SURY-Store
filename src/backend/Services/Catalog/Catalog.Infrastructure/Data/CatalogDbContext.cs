@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Catalog.Infrastructure.Data
 {
-    public class CatalogDbContext : DbContext, IApplicationDbContext
+    public class CatalogDbContext : DbContext, ICatalogDbContext
     {
         public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options)
         {
