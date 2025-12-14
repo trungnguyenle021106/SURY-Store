@@ -1,7 +1,6 @@
 ﻿using BuildingBlocks.Core.Entities;
 using Catalog.Domain.Enums;
-using Catalog.Domain.Exceptions;
-
+using BuildingBlocks.Core.Exceptions;
 
 namespace Catalog.Domain.Entities
 {
