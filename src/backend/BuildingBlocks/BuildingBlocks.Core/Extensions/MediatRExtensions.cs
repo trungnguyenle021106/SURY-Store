@@ -1,6 +1,9 @@
-﻿using Catalog.Application.CQRS.Behaviours;
+﻿using BuildingBlocks.Core.Behaviours;
+using Catalog.Application.CQRS.Behaviours;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+
 
 namespace BuildingBlocks.Core.Extensions
 {
@@ -12,9 +15,11 @@ namespace BuildingBlocks.Core.Extensions
             {
                 cfg.RegisterServicesFromAssembly(assembly);
 
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
                 cfg.AddOpenBehavior(typeof(TransactionBehavior<,>)); 
             });
 
+            services.AddValidatorsFromAssembly(assembly);
             return services;
         }
     }
