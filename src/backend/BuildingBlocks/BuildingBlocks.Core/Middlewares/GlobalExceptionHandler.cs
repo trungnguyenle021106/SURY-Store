@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
 namespace BuildingBlocks.Core.Middlewares
 {
@@ -16,9 +18,9 @@ namespace BuildingBlocks.Core.Middlewares
         }
 
         public async ValueTask<bool> TryHandleAsync(
-            HttpContext httpContext,
-            Exception exception,
-            CancellationToken cancellationToken)
+                HttpContext httpContext,
+                Exception exception,
+                CancellationToken cancellationToken)
         {
             _logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
@@ -29,43 +31,81 @@ namespace BuildingBlocks.Core.Middlewares
 
             switch (exception)
             {
-                case FluentValidation.ValidationException validationEx:
-                    problemDetails.Title = "Validation Error";
-                    problemDetails.Status = StatusCodes.Status400BadRequest;
-                    problemDetails.Detail = "One or more validation errors occurred.";
-                    problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"; 
-
-                    var errors = validationEx.Errors
-                        .GroupBy(e => e.PropertyName)
-                        .ToDictionary(
-                            g => g.Key,
-                            g => g.Select(e => e.ErrorMessage).ToArray()
-                        );
-
-                    problemDetails.Extensions.Add("errors", errors);
+                case ValidationException validationEx:
+                    HandleValidationException(validationEx, problemDetails);
                     break;
 
                 case DomainException domainEx:
-                    problemDetails.Title = "Business Rule Violation";
-                    problemDetails.Status = StatusCodes.Status400BadRequest;
-                    problemDetails.Detail = domainEx.Message;
-                    problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+                    HandleDomainException(domainEx, problemDetails);
+                    break;
+
+                case DbUpdateException dbUpdateEx:
+                    HandleDatabaseException(dbUpdateEx, problemDetails);
                     break;
 
                 default:
-                    problemDetails.Title = "Internal Server Error";
-                    problemDetails.Status = StatusCodes.Status500InternalServerError;
-                    problemDetails.Detail = "An unexpected error occurred. Please contact support.";
-                    problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
+                    HandleUnknownException(exception, problemDetails);
                     break;
             }
 
-            httpContext.Response.StatusCode = problemDetails.Status.Value;
+            httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
 
             await httpContext.Response
                 .WriteAsJsonAsync(problemDetails, cancellationToken);
 
             return true;
+        }
+
+        private void HandleValidationException(ValidationException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Title = "Validation Error";
+            problemDetails.Status = StatusCodes.Status400BadRequest;
+            problemDetails.Detail = "One or more validation errors occurred.";
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+
+            var errors = exception.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            problemDetails.Extensions.Add("errors", errors);
+        }
+
+        private void HandleDomainException(DomainException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Title = "Business Rule Violation";
+            problemDetails.Status = StatusCodes.Status400BadRequest;
+            problemDetails.Detail = exception.Message;
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
+
+        private void HandleDatabaseException(DbUpdateException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Status = StatusCodes.Status500InternalServerError;
+            problemDetails.Title = "Database Error";
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
+            problemDetails.Detail = "An error occurred while saving data.";
+
+            if (exception.InnerException != null &&
+               (exception.InnerException.Message.Contains("duplicate") ||
+                exception.InnerException.Message.Contains("unique") ||
+                exception.InnerException.Message.Contains("IX_"))) 
+            {
+                problemDetails.Status = StatusCodes.Status409Conflict;
+                problemDetails.Title = "Data Conflict";
+                problemDetails.Detail = "Record already exists or violates unique constraint.";
+                problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
+            }
+        }
+
+        private void HandleUnknownException(Exception exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Title = "Internal Server Error";
+            problemDetails.Status = StatusCodes.Status500InternalServerError;
+            problemDetails.Detail = "An unexpected error occurred. Please contact support.";
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
         }
     }
 }
