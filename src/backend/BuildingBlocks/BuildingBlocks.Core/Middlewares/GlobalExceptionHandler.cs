@@ -39,6 +39,10 @@ namespace BuildingBlocks.Core.Middlewares
                     HandleDomainException(domainEx, problemDetails);
                     break;
 
+                case KeyNotFoundException notFoundException:
+                    HandleNotFoundException(notFoundException, problemDetails);
+                    break;
+
                 case DbUpdateException dbUpdateEx:
                     HandleDatabaseException(dbUpdateEx, problemDetails);
                     break;
@@ -79,6 +83,14 @@ namespace BuildingBlocks.Core.Middlewares
             problemDetails.Status = StatusCodes.Status400BadRequest;
             problemDetails.Detail = exception.Message;
             problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
+
+        private void HandleNotFoundException(KeyNotFoundException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Title = "Resource Not Found";
+            problemDetails.Status = StatusCodes.Status404NotFound;
+            problemDetails.Detail = exception.Message;
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         }
 
         private void HandleDatabaseException(DbUpdateException exception, ProblemDetails problemDetails)
