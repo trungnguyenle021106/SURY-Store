@@ -14,15 +14,16 @@ builder.Services.AddCustomDbContext<CatalogDbContext, ICatalogDbContext>(options
 builder.Services.AddCustomMediatR(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
+builder.Services.AddCustomExceptionHandler();
 
 builder.Services.AddCarter();
 var app = builder.Build();
 
+app.UseCustomExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.UseCustomSwagger();
 }
-
 app.MapCarter();
 
 app.Run();
