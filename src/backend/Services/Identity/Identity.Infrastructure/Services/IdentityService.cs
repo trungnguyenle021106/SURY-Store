@@ -1,5 +1,4 @@
-﻿using BuildingBlocks.Core.Exceptions;
-using FluentValidation;
+﻿using FluentValidation;
 using Identity.Application.Common.Interfaces;
 using Identity.Application.Common.Models;
 using Identity.Domain.Entities;
@@ -107,5 +106,52 @@ namespace Identity.Infrastructure.Services
 
             return new AuthenticationResult(newAccessToken, newRefreshTokenString);
         }
+
+        public async Task RevokeTokenAsync(string token)
+        {
+            var refreshToken = await _dbContext.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == token);
+
+            if (refreshToken == null)
+            {
+                throw new ValidationException("Refresh Token không tồn tại.");
+            }
+
+            refreshToken.Revoke();
+
+            _dbContext.RefreshTokens.Update(refreshToken);
+        }
+
+        public async Task<string> ForgotPasswordAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                throw new ValidationException("Email không tồn tại trong hệ thống.");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return token;
+        }
+
+        public async Task ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                throw new ValidationException("Email không tồn tại.");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new ValidationException($"Đặt lại mật khẩu thất bại: {errors}");
+            }
+        }
+
     }
 }
