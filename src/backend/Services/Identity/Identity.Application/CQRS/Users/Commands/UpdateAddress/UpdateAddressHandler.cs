@@ -21,7 +21,7 @@ namespace Identity.Application.CQRS.Users.Commands.UpdateAddress
 
             if (address == null)
             {
-                throw new KeyNotFoundException($"Address with Id {command.AddressId} not found.");
+                throw new KeyNotFoundException($"Địa chỉ với Id {command.AddressId} không tồn tại.");
             }
 
             if (address.UserId != command.UserId.ToString())

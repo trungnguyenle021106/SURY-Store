@@ -33,10 +33,6 @@ namespace Identity.Domain.Entities
 
         public void Update(string receiverName, string phoneNumber, string street, Wards ward, bool isDefault)
         {
-            if (string.IsNullOrWhiteSpace(receiverName)) throw new ArgumentException("Receiver Name required");
-            if (string.IsNullOrWhiteSpace(phoneNumber)) throw new ArgumentException("Phone Number required");
-            if (string.IsNullOrWhiteSpace(street)) throw new ArgumentException("Street required");
-
             ReceiverName = receiverName;
             PhoneNumber = phoneNumber;
             Street = street;

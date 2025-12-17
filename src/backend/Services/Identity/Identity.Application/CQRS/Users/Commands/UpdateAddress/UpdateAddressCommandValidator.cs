@@ -23,5 +23,4 @@ namespace Identity.Application.CQRS.Users.Commands.UpdateAddress
                 .IsInEnum().WithMessage("Phường xã không hợp lệ.");
         }
     }
-    }
 }
