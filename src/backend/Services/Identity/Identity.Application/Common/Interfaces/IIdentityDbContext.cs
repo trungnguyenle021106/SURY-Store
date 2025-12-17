@@ -5,7 +5,8 @@ namespace Identity.Application.Common.Interfaces
 {
     public interface IIdentityDbContext : IApplicationDbContext
     {
-        DbSet<Product> Products { get; }
-        DbSet<Category> Categories { get; }
+        DbSet<ApplicationUser> ApplicationUsers { get; }
+        DbSet<UserAddress> UserAddresses { get; }
+        DbSet<RefreshToken> RefreshTokens { get; }
     }
 }

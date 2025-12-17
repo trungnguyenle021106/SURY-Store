@@ -1,0 +1,111 @@
+﻿using BuildingBlocks.Core.Exceptions;
+using FluentValidation;
+using Identity.Application.Common.Interfaces;
+using Identity.Application.Common.Models;
+using Identity.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace Identity.Infrastructure.Services
+{
+    public class IdentityService : IIdentityService
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ITokenProvider _tokenProvider; 
+        private readonly IIdentityDbContext _dbContext; 
+
+        public IdentityService(
+            UserManager<ApplicationUser> userManager,
+            ITokenProvider tokenProvider,
+            IIdentityDbContext dbContext)
+        {
+            _userManager = userManager;
+            _tokenProvider = tokenProvider;
+            _dbContext = dbContext;
+        }
+
+        public async Task<Guid> RegisterUserAsync(string fullName, string email, string password)
+        {
+            var existingUser = await _userManager.FindByEmailAsync(email);
+            if (existingUser != null)
+                throw new ValidationException($"Email {email} đã được sử dụng.");
+
+            var user = new ApplicationUser(fullName, email);
+            var result = await _userManager.CreateAsync(user, password);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new ValidationException($"Đăng ký thất bại: {errors}");
+            }
+
+            return Guid.Parse(user.Id);
+        }
+
+        public async Task<AuthenticationResult> LoginAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, password))
+            {
+                throw new ValidationException("Thông tin đăng nhập không chính xác.");
+            }
+
+            var accessToken = _tokenProvider.GenerateAccessToken(user);
+            var refreshTokenString = _tokenProvider.GenerateRefreshToken();
+
+            var refreshTokenEntity = new RefreshToken(
+                userId: user.Id,
+                token: refreshTokenString,
+                expiryDate: DateTime.UtcNow.AddDays(7)
+            );
+
+            await _dbContext.RefreshTokens.AddAsync(refreshTokenEntity);
+
+            return new AuthenticationResult(accessToken, refreshTokenString);
+        }
+
+        public async Task<AuthenticationResult> RefreshTokenAsync(string token)
+        {
+            var existingToken = await _dbContext.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == token);
+
+            if (existingToken == null)
+            {
+                throw new ValidationException("Refresh Token không tồn tại.");
+            }
+
+            if (existingToken.IsRevoked)
+            {
+                throw new ValidationException("Token đã bị thu hồi và không thể sử dụng.");
+            }
+
+            if (existingToken.ExpiryDate < DateTime.UtcNow)
+            {
+                throw new ValidationException("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+            }
+
+            var user = await _userManager.FindByIdAsync(existingToken.UserId);
+            if (user == null)
+            {
+                throw new ValidationException("Người dùng không tồn tại.");
+            }
+
+            existingToken.Revoke();
+            _dbContext.RefreshTokens.Update(existingToken);
+
+            var newAccessToken = _tokenProvider.GenerateAccessToken(user);
+            var newRefreshTokenString = _tokenProvider.GenerateRefreshToken();
+
+            var newRefreshTokenEntity = new RefreshToken(
+                userId: user.Id,
+                token: newRefreshTokenString,
+                expiryDate: DateTime.UtcNow.AddDays(7) 
+            );
+
+            await _dbContext.RefreshTokens.AddAsync(newRefreshTokenEntity);
+
+            return new AuthenticationResult(newAccessToken, newRefreshTokenString);
+        }
+    }
+}

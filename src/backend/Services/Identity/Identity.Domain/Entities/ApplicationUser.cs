@@ -10,11 +10,7 @@ namespace Identity.Domain.Entities
 
         public ApplicationUser(string fullName, string email)
         {
-            if (string.IsNullOrWhiteSpace(fullName)) throw new DomainException("Full Name is required");
-            if (string.IsNullOrWhiteSpace(email)) throw new DomainException("Email is required");
-
             FullName = fullName;
-
             UserName = email; 
             Email = email;
         }

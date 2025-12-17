@@ -1,4 +1,5 @@
-﻿using Identity.Domain.Enums;
+﻿using BuildingBlocks.Core.Extensions;
+using Identity.Domain.Enums;
 
 namespace Identity.Domain.Entities
 {
@@ -10,7 +11,6 @@ namespace Identity.Domain.Entities
         public string ReceiverName { get; private set; } = default!;
         public string PhoneNumber { get; private set; } = default!;
 
-        // Chi tiết địa chỉ
         public string Street { get; private set; } = default!; 
         public Wards Ward { get; private set; } 
 
