@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+// Thêm namespace này để bắt lỗi Unauthorized của hệ thống
+using System.Security.Authentication;
 
 namespace BuildingBlocks.Core.Middlewares
 {
@@ -45,6 +47,14 @@ namespace BuildingBlocks.Core.Middlewares
 
                 case DbUpdateException dbUpdateEx:
                     HandleDatabaseException(dbUpdateEx, problemDetails);
+                    break;
+
+                case UnauthorizedAccessException unauthorizedEx:
+                    HandleUnauthorizedException(unauthorizedEx, problemDetails);
+                    break;
+
+                case ForbiddenAccessException forbiddenEx:
+                    HandleForbiddenException(forbiddenEx, problemDetails);
                     break;
 
                 default:
@@ -127,6 +137,22 @@ namespace BuildingBlocks.Core.Middlewares
             problemDetails.Status = StatusCodes.Status500InternalServerError;
             problemDetails.Detail = "An unexpected error occurred. Please contact support.";
             problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
+        }
+
+        private void HandleUnauthorizedException(UnauthorizedAccessException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Status = StatusCodes.Status401Unauthorized;
+            problemDetails.Title = "Unauthorized";
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7235#section-3.1";
+            problemDetails.Detail = "You are not authorized to access this resource. Please log in.";
+        }
+
+        private void HandleForbiddenException(ForbiddenAccessException exception, ProblemDetails problemDetails)
+        {
+            problemDetails.Status = StatusCodes.Status403Forbidden;
+            problemDetails.Title = "Forbidden";
+            problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
+            problemDetails.Detail = exception.Message; // "User does not have permission..."
         }
     }
 }
