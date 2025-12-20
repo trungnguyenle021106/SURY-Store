@@ -39,17 +39,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
-
-builder.Services.AddCors(options =>
+builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AllowAllDev", policy =>
-    {
-        policy.SetIsOriginAllowed(origin => true)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
 });
+
+builder.Services.AddCustomCors(builder.Configuration);
 
 var app = builder.Build();
 
@@ -60,7 +54,7 @@ if (app.Environment.IsDevelopment())
     app.UseCustomSwagger();
 }
 
-app.UseCors("AllowAllDev");
+app.UseCors(CorsExtensions.AllowAllPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

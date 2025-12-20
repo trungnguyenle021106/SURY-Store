@@ -14,7 +14,7 @@ namespace Identity.Application.CQRS.Auth.Commands.ResetPassword
 
         public async Task<ResetPasswordResult> Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
         {
-            await _identityService.ResetPasswordAsync(command.Email, command.Token, command.NewPassword);
+            await _identityService.ResetPasswordAsync(command.Email, command.VerifyToken, command.NewPassword);
             return new ResetPasswordResult(true);
         }
     }

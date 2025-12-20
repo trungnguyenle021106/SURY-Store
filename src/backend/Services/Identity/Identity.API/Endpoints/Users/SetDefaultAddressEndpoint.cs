@@ -1,7 +1,9 @@
-﻿using Carter;
+﻿using BuildingBlocks.Core.Extensions;
+using Carter;
 using Identity.Application.CQRS.Users.Commands.SetDefaultAddress;
 using Mapster;
 using MediatR;
+using System.Security.Claims; 
 
 namespace Identity.API.Endpoints.Users
 {
@@ -11,8 +13,10 @@ namespace Identity.API.Endpoints.Users
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPut("/users/{userId}/addresses/{addressId}/set-default", async (Guid userId, Guid addressId, ISender sender) =>
+            app.MapPut("/users/addresses/{addressId}/default", async (Guid addressId, ClaimsPrincipal user, ISender sender) =>
             {
+                var userId = user.GetUserId();
+
                 var command = new SetDefaultAddressCommand(userId, addressId);
 
                 var result = await sender.Send(command);
@@ -23,7 +27,8 @@ namespace Identity.API.Endpoints.Users
             })
             .WithName("SetDefaultAddress")
             .WithSummary("Set address as default")
-            .WithDescription("Set a specific address as the default delivery address for the user.");
+            .WithDescription("Set a specific address as the default delivery address for the current user.")
+            .RequireAuthorization();
         }
     }
 }

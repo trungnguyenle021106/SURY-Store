@@ -1,8 +1,10 @@
-﻿using Carter;
+﻿using BuildingBlocks.Core.Extensions;
+using Carter;
 using Identity.API.Common.Models;
 using Identity.Application.CQRS.Users.Queries.GetAddressById;
 using Mapster;
 using MediatR;
+using System.Security.Claims;
 
 namespace Identity.API.Endpoints.Users
 {
@@ -10,10 +12,11 @@ namespace Identity.API.Endpoints.Users
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-
-            app.MapGet("/users/addresses/{addressId}", async (Guid addressId, ISender sender) =>
+            app.MapGet("/users/addresses/{addressId}", async (Guid addressId, ClaimsPrincipal user, ISender sender) =>
             {
-                var query = new GetAddressByIdQuery(addressId);
+                var userId = user.GetUserId();
+
+                var query = new GetAddressByIdQuery(userId, addressId);
 
                 var result = await sender.Send(query);
 
@@ -23,7 +26,8 @@ namespace Identity.API.Endpoints.Users
             })
             .WithName("GetAddressById")
             .WithSummary("Get address details")
-            .WithDescription("Get detailed information of a specific address by its Id");
+            .WithDescription("Get detailed information of a specific address by its Id")
+            .RequireAuthorization(); 
         }
     }
 }

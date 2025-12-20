@@ -1,11 +1,13 @@
-﻿using Carter;
+﻿using BuildingBlocks.Core.Extensions;
+using Carter;
 using Identity.Application.CQRS.Users.Commands.UpdateAddress;
 using Identity.Domain.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Security.Claims; 
 namespace Identity.API.Endpoints.Users
+
 {
     public record UpdateAddressRequest(
         string ReceiverName,
@@ -21,12 +23,14 @@ namespace Identity.API.Endpoints.Users
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPut("/users/{userId}/addresses/{addressId}", async (
-                Guid userId,
+            app.MapPut("/users/addresses/{addressId}", async (
                 Guid addressId,
+                ClaimsPrincipal user,
                 [FromBody] UpdateAddressRequest request,
                 ISender sender) =>
             {
+                var userId = user.GetUserId();
+
                 var command = new UpdateAddressCommand(
                     UserId: userId,
                     AddressId: addressId,
@@ -45,7 +49,8 @@ namespace Identity.API.Endpoints.Users
             })
             .WithName("UpdateAddress")
             .WithSummary("Update existing address")
-            .WithDescription("Update details of a specific delivery address.");
+            .WithDescription("Update details of a specific delivery address for the current user.")
+            .RequireAuthorization(); 
         }
     }
 }

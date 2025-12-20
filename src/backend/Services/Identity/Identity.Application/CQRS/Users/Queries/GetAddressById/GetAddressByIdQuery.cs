@@ -14,6 +14,8 @@ namespace Identity.Application.CQRS.Users.Queries.GetAddressById
         string FullAddress,
         bool IsDefault
     );
+
     public record GetAddressByIdResult(UserAddressDto Address);
-    public record GetAddressByIdQuery(Guid AddressId) : IQuery<GetAddressByIdResult>;
+
+    public record GetAddressByIdQuery(Guid UserId, Guid AddressId) : IQuery<GetAddressByIdResult>;
 }

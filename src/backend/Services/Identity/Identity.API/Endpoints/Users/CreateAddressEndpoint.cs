@@ -1,10 +1,11 @@
-﻿using System.Security.Claims; // Cần namespace này
+﻿using BuildingBlocks.Core.Extensions;
 using Carter;
 using Identity.Application.CQRS.Users.Commands.CreateAddress;
 using Identity.Domain.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Identity.API.Endpoints.Users
 {
@@ -24,14 +25,7 @@ namespace Identity.API.Endpoints.Users
         {
             app.MapPost("/users/addresses", async (ClaimsPrincipal user, [FromBody] CreateAddressRequest request, ISender sender) =>
             {
-                var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                if (string.IsNullOrEmpty(userIdString))
-                {
-                    return Results.Unauthorized();
-                }
-
-                var userId = Guid.Parse(userIdString);
+                var userId = user.GetUserId();
 
                 var command = new CreateAddressCommand(
                     UserId: userId,

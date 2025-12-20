@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Core.Extensions;
+using BuildingBlocks.Core.Exceptions; 
 using Identity.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,11 @@ namespace Identity.Application.CQRS.Users.Queries.GetAddressById
             if (address == null)
             {
                 throw new KeyNotFoundException($"Địa chỉ với Id {query.AddressId} không tồn tại.");
+            }
+
+            if (address.UserId != query.UserId.ToString())
+            {
+                throw new ForbiddenAccessException("Bạn không có quyền truy cập vào địa chỉ này.");
             }
 
             var addressDto = new UserAddressDto(
