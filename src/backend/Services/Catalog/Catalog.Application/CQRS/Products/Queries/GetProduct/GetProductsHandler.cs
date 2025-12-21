@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Extensions;
+﻿using BuildingBlocks.Application.Extensions;
 using Catalog.Application.Common.Interfaces;
 using Catalog.Domain.Entities;
 using MediatR;

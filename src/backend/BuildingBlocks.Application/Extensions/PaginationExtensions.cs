@@ -1,8 +1,8 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
-namespace BuildingBlocks.Core.Extensions
+namespace BuildingBlocks.Application.Extensions
 {
     public static class PaginationExtensions
     {

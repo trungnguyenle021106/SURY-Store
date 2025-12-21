@@ -1,6 +1,5 @@
 ﻿using Basket.Application.Common.Interfaces;
 using BuildingBlocks.Infrastructure.Messaging;
-using Mapster;
 using MassTransit;
 using MediatR;
 

@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 
 namespace Catalog.Application.CQRS.Categories.Queries.GetCategoryById
 {

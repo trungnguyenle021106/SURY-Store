@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Extensions;
+﻿using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Identity.Application.CQRS.Users.Commands.SetDefaultAddress;
 using Mapster;

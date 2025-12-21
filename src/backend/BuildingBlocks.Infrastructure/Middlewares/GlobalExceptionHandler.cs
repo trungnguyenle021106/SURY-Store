@@ -5,10 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
-// Thêm namespace này để bắt lỗi Unauthorized của hệ thống
-using System.Security.Authentication;
 
-namespace BuildingBlocks.Core.Middlewares
+
+namespace BuildingBlocks.Infrastructure.Middlewares
 {
     public class GlobalExceptionHandler : IExceptionHandler
     {

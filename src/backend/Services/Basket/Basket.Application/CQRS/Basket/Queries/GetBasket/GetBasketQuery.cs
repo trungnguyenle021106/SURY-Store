@@ -1,5 +1,5 @@
 ﻿using Basket.Domain.Entities;
-using BuildingBlocks.Core.CQRS;
+using BuildingBlocks.Application.MediatR.CQRS;
 
 namespace Basket.Application.CQRS.Basket.Queries.GetBasket
 {

@@ -1,8 +1,9 @@
-﻿using BuildingBlocks.Core.CQRS;
-using BuildingBlocks.Core.Infrastructure.Data;
+﻿using BuildingBlocks.Application.Data;
+using BuildingBlocks.Application.MediatR.CQRS;
+
 using MediatR;
 
-namespace Catalog.Application.CQRS.Behaviours
+namespace BuildingBlocks.Application.MediatR.Behaviours
 {
     public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : ICommand<TResponse>

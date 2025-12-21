@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 using Carter;
 using Catalog.API.Commons.Models;
 using Catalog.Application.CQRS.Categories.Queries.GetCategories;

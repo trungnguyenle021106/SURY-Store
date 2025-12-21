@@ -1,8 +1,8 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 using FluentValidation;
 using MediatR;
 
-namespace BuildingBlocks.Core.Behaviours
+namespace BuildingBlocks.Application.MediatR.Behaviours
 {
     public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
          where TRequest : ICommand<TResponse>

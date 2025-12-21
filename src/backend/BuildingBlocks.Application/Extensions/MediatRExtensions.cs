@@ -1,11 +1,10 @@
-﻿using BuildingBlocks.Core.Behaviours;
-using Catalog.Application.CQRS.Behaviours;
+﻿using BuildingBlocks.Application.MediatR.Behaviours;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 
-namespace BuildingBlocks.Core.Extensions
+namespace BuildingBlocks.Application.Extensions
 {
     public static class MediatRExtensions
     {

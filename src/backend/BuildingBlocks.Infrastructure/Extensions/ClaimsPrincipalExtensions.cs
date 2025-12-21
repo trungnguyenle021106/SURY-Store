@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 
-
-namespace BuildingBlocks.Core.Extensions
+namespace BuildingBlocks.Infrastructure.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {

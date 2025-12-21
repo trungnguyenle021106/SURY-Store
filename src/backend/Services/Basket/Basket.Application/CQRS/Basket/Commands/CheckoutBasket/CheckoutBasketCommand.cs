@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 using BuildingBlocks.Core.Enums;
 
 

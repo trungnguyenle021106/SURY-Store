@@ -1,6 +1,7 @@
 ﻿using Basket.Application.Common.Interfaces;
 using Basket.Infrastructure.Repositories;
 using BuildingBlocks.Core.Extensions;
+using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 
 var builder = WebApplication.CreateBuilder(args);

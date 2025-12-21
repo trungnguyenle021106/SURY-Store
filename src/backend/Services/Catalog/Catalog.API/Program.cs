@@ -1,4 +1,5 @@
-﻿using BuildingBlocks.Core.Extensions;
+﻿using BuildingBlocks.Application.Extensions;
+using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Catalog.Application.Common.Interfaces;
 using Catalog.Infrastructure.Data;
@@ -15,6 +16,7 @@ builder.Services.AddCustomMediatR(typeof(Catalog.Application.AssemblyReference).
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
+builder.Services.AddCustomCors(builder.Configuration);
 
 builder.Services.AddCarter();
 

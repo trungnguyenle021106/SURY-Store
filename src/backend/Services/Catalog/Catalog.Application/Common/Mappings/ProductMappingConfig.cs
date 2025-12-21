@@ -1,4 +1,4 @@
-﻿ using Mapster;
+﻿using Mapster;
 using Catalog.Application.CQRS.Products.Commands.CreateProduct; 
 using Catalog.Domain.Entities; 
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BuildingBlocks.Core.Extensions
+namespace BuildingBlocks.Infrastructure.Extensions
 {
     public static class CorsExtensions
     {

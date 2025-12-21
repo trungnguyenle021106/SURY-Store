@@ -1,7 +1,7 @@
-﻿using BuildingBlocks.Core.Extensions;
+﻿using BuildingBlocks.Core.Enums;
+using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Identity.Application.CQRS.Users.Commands.CreateAddress;
-using Identity.Domain.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

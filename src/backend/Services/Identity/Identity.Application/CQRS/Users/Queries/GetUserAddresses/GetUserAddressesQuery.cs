@@ -1,5 +1,5 @@
-﻿using BuildingBlocks.Core.CQRS;
-using Identity.Domain.Enums;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
+using BuildingBlocks.Core.Enums;
 
 namespace Identity.Application.CQRS.Users.Queries.GetUserAddresses
 {

@@ -1,8 +1,8 @@
-﻿using BuildingBlocks.Core.Middlewares;
+﻿using BuildingBlocks.Infrastructure.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BuildingBlocks.Core.Extensions
+namespace BuildingBlocks.Infrastructure.Extensions
 {
     public static class ExceptionHandlingExtensions
     {

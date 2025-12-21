@@ -1,6 +1,6 @@
 ﻿using BuildingBlocks.Core.Entities;
 using BuildingBlocks.Core.Extensions;
-using Identity.Domain.Enums;
+using BuildingBlocks.Core.Enums;
 
 namespace Identity.Domain.Entities
 {

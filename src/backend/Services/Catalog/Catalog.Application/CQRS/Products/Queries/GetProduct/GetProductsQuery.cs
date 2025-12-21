@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Application.MediatR.CQRS;
 using Catalog.Domain.Enums;
 
 namespace Catalog.Application.CQRS.Products.Queries.GetProduct

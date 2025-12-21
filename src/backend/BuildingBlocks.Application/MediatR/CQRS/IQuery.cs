@@ -1,5 +1,5 @@
 ﻿using MediatR;
-namespace BuildingBlocks.Core.CQRS
+namespace BuildingBlocks.Application.MediatR.CQRS
 {
     public interface IQuery<out TResponse> : IRequest<TResponse>
     {

@@ -1,14 +1,14 @@
-﻿using BuildingBlocks.Core.Extensions;
+﻿using BuildingBlocks.Application.Extensions;
+using BuildingBlocks.Core.Extensions;
+using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Data;
 using Identity.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text; 
+
 
 var builder = WebApplication.CreateBuilder(args);
 

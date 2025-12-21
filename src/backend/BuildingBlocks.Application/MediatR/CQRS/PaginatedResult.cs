@@ -1,4 +1,4 @@
-﻿namespace BuildingBlocks.Core.CQRS
+﻿namespace BuildingBlocks.Application.MediatR.CQRS
 {
     public class PaginatedResult<T>
     {

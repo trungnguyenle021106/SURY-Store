@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Infrastructure.Data;
+﻿using BuildingBlocks.Application.Data;
 using Catalog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 namespace Catalog.Application.Common.Interfaces

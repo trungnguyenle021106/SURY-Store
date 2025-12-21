@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 
-namespace BuildingBlocks.Core.Infrastructure.Data
+namespace BuildingBlocks.Application.Data
 {
     public interface IApplicationDbContext
     {

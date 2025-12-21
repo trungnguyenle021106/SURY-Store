@@ -1,5 +1,6 @@
-﻿using BuildingBlocks.Core.Extensions; 
-using Identity.Domain.Enums;
+﻿using BuildingBlocks.Core.Enums;
+using BuildingBlocks.Core.Extensions; 
+
 using MediatR;
 
 namespace Identity.Application.CQRS.Commons.Queries.GetWards
