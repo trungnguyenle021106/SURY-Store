@@ -34,7 +34,8 @@ namespace Basket.API.Endpoints.Basket
             })
             .WithName("CheckoutBasket")
             .WithSummary("Checkout basket (COD)")
-            .WithDescription("Checkout using strict UserAddress format.");
+            .WithDescription("Checkout using strict UserAddress format.")
+            .RequireAuthorization();
         }
     }
 }
