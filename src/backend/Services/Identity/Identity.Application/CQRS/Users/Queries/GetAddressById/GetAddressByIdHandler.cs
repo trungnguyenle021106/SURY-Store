@@ -26,7 +26,7 @@ namespace Identity.Application.CQRS.Users.Queries.GetAddressById
                 throw new KeyNotFoundException($"Địa chỉ với Id {query.AddressId} không tồn tại.");
             }
 
-            if (address.UserId != query.UserId.ToString())
+            if (address.UserId != query.UserId)
             {
                 throw new ForbiddenAccessException("Bạn không có quyền truy cập vào địa chỉ này.");
             }

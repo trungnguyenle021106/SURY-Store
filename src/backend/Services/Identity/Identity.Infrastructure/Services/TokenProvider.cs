@@ -1,5 +1,6 @@
 ﻿using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,20 +13,28 @@ namespace Identity.Infrastructure.Services
     public class TokenProvider : ITokenProvider
     {
         private readonly IConfiguration _configuration;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TokenProvider(IConfiguration configuration)
+        public TokenProvider(IConfiguration configuration, UserManager<ApplicationUser> userManager)
         {
             _configuration = configuration;
+            _userManager = userManager;
         }
 
-        public string GenerateAccessToken(ApplicationUser user)
+        public async Task<string> GenerateAccessToken(ApplicationUser user) 
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
                 new Claim(JwtRegisteredClaimNames.Name, user.FullName!),
             };
+
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -40,7 +49,6 @@ namespace Identity.Infrastructure.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
 
         public string GenerateRefreshToken()
         {

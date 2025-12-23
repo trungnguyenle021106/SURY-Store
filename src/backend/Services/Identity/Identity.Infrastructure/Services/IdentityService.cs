@@ -11,20 +11,23 @@ namespace Identity.Infrastructure.Services
     public class IdentityService : IIdentityService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly ITokenProvider _tokenProvider; 
         private readonly IIdentityDbContext _dbContext; 
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
             ITokenProvider tokenProvider,
-            IIdentityDbContext dbContext)
+            IIdentityDbContext dbContext,
+            RoleManager<IdentityRole<Guid>> roleManager)
         {
             _userManager = userManager;
             _tokenProvider = tokenProvider;
             _dbContext = dbContext;
+            _roleManager = roleManager;
         }
 
-        public async Task<Guid> RegisterUserAsync(string fullName, string email, string password)
+        public async Task<Guid> RegisterUserAsync(string fullName, string email, string password, string role)
         {
             var existingUser = await _userManager.FindByEmailAsync(email);
             if (existingUser != null)
@@ -39,7 +42,16 @@ namespace Identity.Infrastructure.Services
                 throw new ValidationException($"Đăng ký thất bại: {errors}");
             }
 
-            return Guid.Parse(user.Id);
+            if (await _roleManager.RoleExistsAsync(role))
+            {
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else
+            {
+                throw new ValidationException($"Lỗi hệ thống: Role '{role}' chưa được khởi tạo.");
+            }
+
+            return user.Id;
         }
 
         public async Task<AuthenticationResult> LoginAsync(string email, string password)
@@ -50,7 +62,7 @@ namespace Identity.Infrastructure.Services
                 throw new ValidationException("Thông tin đăng nhập không chính xác.");
             }
 
-            var accessToken = _tokenProvider.GenerateAccessToken(user);
+            var accessToken = await _tokenProvider.GenerateAccessToken(user);
             var refreshTokenString = _tokenProvider.GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken(
@@ -84,7 +96,7 @@ namespace Identity.Infrastructure.Services
                 throw new ValidationException("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
             }
 
-            var user = await _userManager.FindByIdAsync(existingToken.UserId);
+            var user = await _userManager.FindByIdAsync(existingToken.UserId.ToString());
             if (user == null)
             {
                 throw new ValidationException("Người dùng không tồn tại.");
@@ -93,7 +105,7 @@ namespace Identity.Infrastructure.Services
             existingToken.Revoke();
             _dbContext.RefreshTokens.Update(existingToken);
 
-            var newAccessToken = _tokenProvider.GenerateAccessToken(user);
+            var newAccessToken = await _tokenProvider.GenerateAccessToken(user);
             var newRefreshTokenString = _tokenProvider.GenerateRefreshToken();
 
             var newRefreshTokenEntity = new RefreshToken(

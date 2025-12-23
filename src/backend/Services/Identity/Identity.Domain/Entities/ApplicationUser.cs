@@ -2,7 +2,7 @@
 
 namespace Identity.Domain.Entities
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser<Guid>
     {
         public string FullName { get; private set; } = default!;
         public string? AvatarUrl { get; private set; }
@@ -11,6 +11,7 @@ namespace Identity.Domain.Entities
 
         public ApplicationUser(string fullName, string email)
         {
+            Id = Guid.NewGuid();
             FullName = fullName;
             UserName = email; 
             Email = email;

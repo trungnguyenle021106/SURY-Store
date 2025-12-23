@@ -6,7 +6,7 @@ namespace Identity.Domain.Entities
 {
     public class UserAddress : BaseEntity<Guid>
     {
-        public string UserId { get; private set; } = default!;
+        public Guid UserId { get; private set; } = default!;
 
         public string ReceiverName { get; private set; } = default!;
         public string PhoneNumber { get; private set; } = default!;
@@ -22,7 +22,7 @@ namespace Identity.Domain.Entities
 
         private UserAddress() { }
 
-        public UserAddress(string userId, string receiverName, string phoneNumber, string street, Wards ward, bool isDefault = false)
+        public UserAddress(Guid userId, string receiverName, string phoneNumber, string street, Wards ward, bool isDefault = false)
         {
             Id = Guid.NewGuid();
             UserId = userId;

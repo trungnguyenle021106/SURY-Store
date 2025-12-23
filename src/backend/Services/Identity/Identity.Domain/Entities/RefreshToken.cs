@@ -4,7 +4,7 @@ namespace Identity.Domain.Entities
 {
     public class RefreshToken : BaseEntity<Guid>
     {
-        public string UserId { get; private set; } = default!;
+        public Guid UserId { get; private set; } = default!;
 
         public string Token { get; private set; } = default!;
         public DateTime ExpiryDate { get; private set; }
@@ -13,7 +13,7 @@ namespace Identity.Domain.Entities
 
         private RefreshToken() { }
 
-        public RefreshToken(string userId, string token, DateTime expiryDate)
+        public RefreshToken(Guid userId, string token, DateTime expiryDate)
         {
             Id = Guid.NewGuid();
             UserId = userId; 

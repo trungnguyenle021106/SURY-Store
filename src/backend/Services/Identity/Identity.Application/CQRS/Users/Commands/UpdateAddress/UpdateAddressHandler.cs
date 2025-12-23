@@ -24,7 +24,7 @@ namespace Identity.Application.CQRS.Users.Commands.UpdateAddress
                 throw new KeyNotFoundException($"Địa chỉ với Id {command.AddressId} không tồn tại.");
             }
 
-            if (address.UserId != command.UserId.ToString())
+            if (address.UserId != command.UserId)
             {
                 throw new ForbiddenAccessException("Bạn không có quyền chỉnh sửa địa chỉ này.");
             }
@@ -32,7 +32,7 @@ namespace Identity.Application.CQRS.Users.Commands.UpdateAddress
             if (command.IsDefault && !address.IsDefault)
             {
                 var existingDefault = await _dbContext.UserAddresses
-                    .FirstOrDefaultAsync(a => a.UserId == command.UserId.ToString() && a.IsDefault && a.Id != command.AddressId, cancellationToken);
+                    .FirstOrDefaultAsync(a => a.UserId == command.UserId && a.IsDefault && a.Id != command.AddressId, cancellationToken);
 
                 if (existingDefault != null)
                 {

@@ -24,7 +24,7 @@ namespace Identity.Application.CQRS.Users.Commands.SetDefaultAddress
                 throw new KeyNotFoundException($"Địa chỉ với Id {command.AddressId} không tồn tại.");
             }
 
-            if (targetAddress.UserId != command.UserId.ToString())
+            if (targetAddress.UserId != command.UserId)
             {
                 throw new ForbiddenAccessException("Bạn không có quyền chỉnh sửa địa chỉ này.");
             }
@@ -35,7 +35,7 @@ namespace Identity.Application.CQRS.Users.Commands.SetDefaultAddress
             }
 
             var currentDefault = await _dbContext.UserAddresses
-                .FirstOrDefaultAsync(a => a.UserId == command.UserId.ToString() && a.IsDefault, cancellationToken);
+                .FirstOrDefaultAsync(a => a.UserId == command.UserId && a.IsDefault, cancellationToken);
 
             if (currentDefault != null)
             {

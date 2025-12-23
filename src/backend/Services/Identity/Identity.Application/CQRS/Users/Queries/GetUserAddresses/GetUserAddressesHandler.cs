@@ -16,11 +16,9 @@ namespace Identity.Application.CQRS.Users.Queries.GetUserAddresses
 
         public async Task<GetUserAddressesResult> Handle(GetUserAddressesQuery query, CancellationToken cancellationToken)
         {
-            var userIdString = query.UserId.ToString();
-
             var addresses = await _dbContext.UserAddresses
                 .AsNoTracking() 
-                .Where(a => a.UserId == userIdString)
+                .Where(a => a.UserId == query.UserId)
                 .OrderByDescending(a => a.IsDefault) 
                 .ToListAsync(cancellationToken);
 

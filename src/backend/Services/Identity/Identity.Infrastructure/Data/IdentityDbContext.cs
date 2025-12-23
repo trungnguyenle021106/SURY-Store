@@ -1,11 +1,13 @@
 ﻿using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Identity.Infrastructure.Data
 {
-    public class IdentityDbContext : DbContext, IIdentityDbContext
+    public class IdentityDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>, IIdentityDbContext
     {
         public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
         {
@@ -34,6 +36,7 @@ namespace Identity.Infrastructure.Data
                 entity.Property(u => u.AvatarUrl)
                       .IsRequired(false);
             });
+
 
 
             builder.Entity<UserAddress>(entity =>
@@ -74,6 +77,21 @@ namespace Identity.Infrastructure.Data
                       .IsRequired()
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            builder.Entity<IdentityRole<Guid>>().HasData(
+                new IdentityRole<Guid>
+                {
+                    Id = Guid.Parse("c7b013f0-5201-4317-abd8-c211f91b7330"), 
+                    Name = "Admin",
+                    NormalizedName = "ADMIN" 
+                },
+                new IdentityRole<Guid>
+                {
+                    Id = Guid.Parse("bd58619d-7281-4345-b04f-706d337f7179"),
+                    Name = "Customer",
+                    NormalizedName = "CUSTOMER"
+                }
+            );
         }
     }
 }

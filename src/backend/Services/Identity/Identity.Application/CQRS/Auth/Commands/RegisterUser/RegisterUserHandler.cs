@@ -14,7 +14,7 @@ namespace Identity.Application.CQRS.Auth.Commands.RegisterUser
 
         public async Task<RegisterUserResult> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
         {
-            var userId = await _identityService.RegisterUserAsync(command.FullName, command.Email, command.Password);
+            var userId = await _identityService.RegisterUserAsync(command.FullName, command.Email, command.Password, command.Role);
             return new RegisterUserResult(userId);
         }
     }

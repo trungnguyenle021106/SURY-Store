@@ -24,7 +24,8 @@ builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 
 builder.Services.AddCarter();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 {
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;

@@ -16,7 +16,7 @@ namespace Identity.API.Endpoints.Auth
         {
             app.MapPost("/auth/register", async ([FromBody] RegisterUserRequest request, ISender sender, CancellationToken cancellationToken) =>
             {
-                var command = request.Adapt<RegisterUserCommand>();
+                var command = new RegisterUserCommand(request.FullName, request.Email, request.Password, "Customer");
 
                 var result = await sender.Send(command, cancellationToken);
 

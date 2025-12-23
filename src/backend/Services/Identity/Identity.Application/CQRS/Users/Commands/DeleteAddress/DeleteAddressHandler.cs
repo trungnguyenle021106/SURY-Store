@@ -24,7 +24,7 @@ namespace Identity.Application.CQRS.Users.Commands.DeleteAddress
                 throw new KeyNotFoundException($"Địa chỉ với Id {command.AddressId} không tồn tại.");
             }
 
-            if (address.UserId != command.UserId.ToString())
+            if (address.UserId != command.UserId)
             {
                 throw new ForbiddenAccessException("Bạn không có quyền xóa địa chỉ này.");
             }

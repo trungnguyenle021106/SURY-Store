@@ -1,5 +1,6 @@
 ﻿using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
+using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,12 +17,10 @@ namespace Identity.Application.CQRS.Users.Commands.CreateAddress
 
         public async Task<CreateAddressResult> Handle(CreateAddressCommand command, CancellationToken cancellationToken)
         {
-            var userIdStr = command.UserId.ToString();
-
             if (command.IsDefault)
             {
                 var existingDefault = await _dbContext.UserAddresses
-                    .FirstOrDefaultAsync(a => a.UserId == userIdStr && a.IsDefault, cancellationToken);
+                    .FirstOrDefaultAsync(a => a.UserId == command.UserId && a.IsDefault, cancellationToken);
 
                 if (existingDefault != null)
                 {
@@ -29,14 +28,7 @@ namespace Identity.Application.CQRS.Users.Commands.CreateAddress
                     _dbContext.UserAddresses.Update(existingDefault);
                 }
             }
-            var newAddress = new UserAddress(
-                userIdStr,
-                command.ReceiverName,
-                command.PhoneNumber,
-                command.Street,
-                command.Ward,
-                command.IsDefault
-            );
+            var newAddress = command.Adapt<UserAddress>();
             await _dbContext.UserAddresses.AddAsync(newAddress, cancellationToken);
 
             return new CreateAddressResult(newAddress.Id);

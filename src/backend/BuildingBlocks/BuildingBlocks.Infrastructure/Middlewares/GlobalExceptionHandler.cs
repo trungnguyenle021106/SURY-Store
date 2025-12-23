@@ -151,7 +151,7 @@ namespace BuildingBlocks.Infrastructure.Middlewares
             problemDetails.Status = StatusCodes.Status403Forbidden;
             problemDetails.Title = "Forbidden";
             problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
-            problemDetails.Detail = exception.Message; // "User does not have permission..."
+            problemDetails.Detail = exception.Message; 
         }
     }
 }
