@@ -1,5 +1,5 @@
 ﻿using Basket.Application.Common.Interfaces;
-using BuildingBlocks.Infrastructure.Messaging;
+using BuildingBlocks.Core.Messaging;
 using MassTransit;
 using MediatR;
 
