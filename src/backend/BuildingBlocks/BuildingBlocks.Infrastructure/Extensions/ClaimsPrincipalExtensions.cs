@@ -9,5 +9,10 @@ namespace BuildingBlocks.Infrastructure.Extensions
             var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
             return Guid.TryParse(userId, out var parsedId) ? parsedId : Guid.Empty;
         }
+
+        public static string? GetUserName(this ClaimsPrincipal principal)
+        {
+            return principal.FindFirstValue(ClaimTypes.Email);
+        }
     }
 }

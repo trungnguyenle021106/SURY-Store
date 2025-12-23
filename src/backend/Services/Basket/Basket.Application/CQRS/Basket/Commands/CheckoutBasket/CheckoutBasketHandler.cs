@@ -1,5 +1,5 @@
 ﻿using Basket.Application.Common.Interfaces;
-using BuildingBlocks.Infrastructure.Messaging;
+using BuildingBlocks.Core.Messaging;
 using MassTransit;
 using MediatR;
 
@@ -26,7 +26,7 @@ namespace Basket.Application.CQRS.Basket.Commands.CheckoutBasket
 
             var eventMessage = new BasketCheckoutEvent
             {
-                UserName = command.UserName,
+                Email = command.UserName,
                 TotalPrice = basket.TotalPrice,
                 ReceiverName = command.ReceiverName,
                 PhoneNumber = command.PhoneNumber,
