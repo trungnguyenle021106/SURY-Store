@@ -24,8 +24,7 @@ namespace Identity.Infrastructure.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Name, user.UserName!),
-                new Claim("FullName", $"{user.FullName}")
+                new Claim(JwtRegisteredClaimNames.Name, user.FullName!),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
