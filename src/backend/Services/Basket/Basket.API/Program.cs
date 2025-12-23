@@ -14,13 +14,13 @@ builder.Services.AddCustomMediatR(typeof(Basket.Application.AssemblyReference).A
 builder.Services.AddCustomMapster(typeof(Basket.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
-
-builder.Services.AddCarter();
-
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
+builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
 });
+
+builder.Services.AddCarter();
 
 var app = builder.Build();
 
