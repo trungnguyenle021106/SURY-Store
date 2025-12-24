@@ -2,11 +2,7 @@
 using MassTransit;
 using MediatR;
 using Ordering.Application.CQRS.Orders.Commands.CreateOrder;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Ordering.Application.EventHandlers
 {
@@ -23,10 +19,8 @@ namespace Ordering.Application.EventHandlers
         {
             var message = context.Message;
 
-            // 1. Map dữ liệu từ Event sang Command
-            // Lưu ý: Ta giả định UserName truyền từ Basket chính là UserId dạng Guid
             var command = new CreateOrderCommand(
-                UserId: Guid.Parse(message.UserName),
+                UserId: message.UserId, 
                 TotalPrice: message.TotalPrice,
                 ShippingAddress: new AddressDto(
                     message.ReceiverName,
@@ -46,10 +40,9 @@ namespace Ordering.Application.EventHandlers
                 )).ToList()
             );
 
-            // 2. Gửi Command đi xử lý (Lưu vào SQL Server qua CreateOrderHandler)
             await _sender.Send(command);
 
-            Console.WriteLine($"[Ordering Service] Đã xử lý xong BasketCheckoutEvent cho User: {message.UserName}");
+            Console.WriteLine($"[Ordering] Order created automatically for User: {message.UserId}");
         }
     }
 }
