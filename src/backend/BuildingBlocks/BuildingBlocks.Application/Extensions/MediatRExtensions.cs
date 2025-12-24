@@ -8,17 +8,25 @@ namespace BuildingBlocks.Application.Extensions
 {
     public static class MediatRExtensions
     {
-        public static IServiceCollection AddCustomMediatR(this IServiceCollection services, Assembly assembly)
+        public static IServiceCollection AddCustomMediatR(
+            this IServiceCollection services,
+            Assembly assembly,
+            Action<MediatRServiceConfiguration>? configuration = null)
         {
-
             services.AddValidatorsFromAssembly(assembly);
+
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(assembly);
-
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-                cfg.AddOpenBehavior(typeof(TransactionBehavior<,>)); 
+
+
+                if (configuration != null)
+                {
+                    configuration(cfg);
+                }
             });
+
             return services;
         }
     }

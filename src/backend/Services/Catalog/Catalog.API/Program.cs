@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Application.Extensions;
+using BuildingBlocks.Application.MediatR.Behaviours;
 using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Catalog.Application.Common.Interfaces;
@@ -12,7 +13,13 @@ builder.Services.AddCustomDbContext<CatalogDbContext, ICatalogDbContext>(options
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Database"));
 });
-builder.Services.AddCustomMediatR(typeof(Catalog.Application.AssemblyReference).Assembly);
+builder.Services.AddCustomMediatR(
+    typeof(Catalog.Application.AssemblyReference).Assembly,
+    cfg =>
+    {
+        cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
+    }
+);
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();

@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Application.Extensions;
+using BuildingBlocks.Application.MediatR.Behaviours;
 using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Identity.Application.Common.Interfaces;
@@ -17,7 +18,13 @@ builder.Services.AddCustomDbContext<IdentityDbContext, IIdentityDbContext>(optio
 });
 builder.Services.AddCustomExceptionHandler();
 builder.Services.AddCustomMapster(typeof(Identity.Application.AssemblyReference).Assembly);
-builder.Services.AddCustomMediatR(typeof(Identity.Application.AssemblyReference).Assembly);
+builder.Services.AddCustomMediatR(
+    typeof(Identity.Application.AssemblyReference).Assembly,
+    cfg =>
+    {
+        cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
+    }
+);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();

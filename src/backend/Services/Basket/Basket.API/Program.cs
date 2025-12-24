@@ -16,6 +16,7 @@ builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
 builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration);
+builder.Services.AddCustomCors(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
 });
