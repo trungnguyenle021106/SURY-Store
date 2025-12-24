@@ -32,11 +32,18 @@ namespace Basket.Application.CQRS.Basket.Commands.CheckoutBasket
                 ReceiverName = command.ReceiverName,
                 PhoneNumber = command.PhoneNumber,
                 Street = command.Street,
-                Ward = (int)command.Ward, 
-                City = "TP.Hồ Chí Minh", 
+                Ward = (int)command.Ward,
+                City = "TP.Hồ Chí Minh",
 
                 Note = command.Note,
-                PaymentMethod = 1 
+                PaymentMethod = 1,
+                Items = basket.Items.Select(i => new BasketCheckoutOrderItemModel(
+                    Guid.Parse(i.ProductId),
+                    i.ProductName,
+                    i.Price,
+                    i.Quantity,
+                    i.PictureUrl
+                )).ToList()
             };
 
             await _publishEndpoint.Publish(eventMessage, cancellationToken);
