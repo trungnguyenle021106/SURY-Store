@@ -12,9 +12,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.Application\BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.Core\BuildingBlocks.Core.csproj" />
     <ProjectReference Include="..\Ordering.Domain\Ordering.Domain.csproj" />
-    <ProjectReference Include="..\Ordering.Infrastructure\Ordering.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\Mappings\" />
+    <Folder Include="CQRS\Orders\Queries\" />
   </ItemGroup>
 
 </Project>

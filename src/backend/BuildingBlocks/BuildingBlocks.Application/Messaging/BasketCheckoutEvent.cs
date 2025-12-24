@@ -13,6 +13,16 @@
         public string City { get; set; } = "TP.Hồ Chí Minh";
 
         public string? Note { get; set; } 
-        public int PaymentMethod { get; set; } 
+        public int PaymentMethod { get; set; }
+
+        public List<BasketCheckoutOrderItemModel> Items { get; set; } = new();
     }
+
+    public record BasketCheckoutOrderItemModel(
+        Guid ProductId,
+        string ProductName,
+        decimal UnitPrice,
+        int Quantity,
+        string PictureUrl
+    );
 }
