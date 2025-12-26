@@ -20,6 +20,7 @@ builder.Services.AddCustomMediatR(
         cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
     }
 );
+builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration);
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();

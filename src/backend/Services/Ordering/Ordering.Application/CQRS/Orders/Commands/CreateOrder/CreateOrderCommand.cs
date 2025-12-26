@@ -20,6 +20,7 @@ namespace Ordering.Application.CQRS.Orders.Commands.CreateOrder
     public record CreateOrderResult(Guid Id);
 
     public record CreateOrderCommand(
+        Guid OrderId,
         Guid UserId,
         decimal TotalPrice,
         AddressDto ShippingAddress,

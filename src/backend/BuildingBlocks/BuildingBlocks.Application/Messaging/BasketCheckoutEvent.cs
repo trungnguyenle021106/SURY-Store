@@ -2,6 +2,7 @@
 {
     public record BasketCheckoutEvent
     {
+        public Guid OrderId { get; set; } = Guid.NewGuid();
         public Guid UserId { get; set; }
         public string Email { get; set; } = default!;
         public decimal TotalPrice { get; set; }

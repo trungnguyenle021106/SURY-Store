@@ -20,6 +20,7 @@ namespace Ordering.Application.EventHandlers
             var message = context.Message;
 
             var command = new CreateOrderCommand(
+                OrderId : message.OrderId,
                 UserId: message.UserId, 
                 TotalPrice: message.TotalPrice,
                 ShippingAddress: new AddressDto(

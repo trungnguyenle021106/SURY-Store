@@ -19,9 +19,9 @@ namespace Ordering.Domain.Entities
 
         private Order() { }
 
-        public Order(Guid userId, decimal totalPrice, Address shippingAddress, int paymentMethod)
+        public Order(Guid orderID,Guid userId, decimal totalPrice, Address shippingAddress, int paymentMethod)
         {
-            Id = Guid.NewGuid();
+            Id = orderID;
             UserId = userId;
             TotalPrice = totalPrice;
             ShippingAddress = shippingAddress;
@@ -48,7 +48,7 @@ namespace Ordering.Domain.Entities
         public void MarkAsShipped()
         {
             if (Status != OrderStatus.Processing)
-                throw new DomainException("Đơn hàng phải được soạn xong (Processing) trước khi giao.");
+                throw new DomainException("Đơn hàng phải được soạn xong trước khi giao.");
             Status = OrderStatus.Shipping;
         }
 
@@ -64,6 +64,13 @@ namespace Ordering.Domain.Entities
             if (Status == OrderStatus.Shipping || Status == OrderStatus.Completed)
                 throw new DomainException("Không thể hủy đơn hàng đã giao hoặc đã hoàn thành.");
             Status = OrderStatus.Cancelled;
+        }
+
+        public void MarkAsOutOfStock()
+        {
+            if (Status != OrderStatus.Pending)
+                throw new DomainException("Chỉ có thể đặt trạng thái hết hàng cho đơn hàng đang chờ xác nhận.");
+            Status = OrderStatus.OutOfStock;
         }
     }
 }

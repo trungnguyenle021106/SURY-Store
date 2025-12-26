@@ -17,6 +17,8 @@ namespace Ordering.Application.CQRS.Orders.Commands.CreateOrder
 
         public async Task<CreateOrderResult> Handle(CreateOrderCommand command, CancellationToken cancellationToken)
         {
+
+
             var shippingAddress = new Address(
                 command.ShippingAddress.ReceiverName,
                 command.ShippingAddress.PhoneNumber,
@@ -27,6 +29,7 @@ namespace Ordering.Application.CQRS.Orders.Commands.CreateOrder
             );
 
             var order = new Order(
+                orderId,
                 command.UserId,
                 command.TotalPrice,
                 shippingAddress,

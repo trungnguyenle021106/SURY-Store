@@ -17,6 +17,9 @@ namespace Ordering.Domain.Enums
         Completed = 4,
 
         [Description("Đã hủy")]
-        Cancelled = 5
+        Cancelled = 5,
+
+        [Description("Hết hàng")]
+        OutOfStock = 6
     }
 }
