@@ -3,6 +3,5 @@
 namespace Ordering.Application.CQRS.Orders.Commands.CancelOrder
 {
     public record CancelOrderResult(bool IsSuccess);
-
-    public record CancelOrderCommand(Guid OrderId) : ICommand<CancelOrderResult>;
+    public record CancelOrderCommand(Guid OrderId, Guid UserId, bool IsAdmin) : ICommand<CancelOrderResult>;
 }

@@ -29,7 +29,7 @@ namespace Ordering.Application.CQRS.Orders.Commands.CreateOrder
             );
 
             var order = new Order(
-                orderId,
+                command.OrderId,
                 command.UserId,
                 command.TotalPrice,
                 shippingAddress,

@@ -21,7 +21,8 @@ namespace Ordering.API.Endpoints.Orders
             })
             .WithName("ShipOrder")
             .WithSummary("Mark order as shipped")
-            .WithDescription("Change order status from Processing to Shipping.");
+            .WithDescription("Change order status from Processing to Shipping.")
+            .RequireAuthorization();
         }
     }
 }

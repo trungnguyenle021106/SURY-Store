@@ -1,7 +1,9 @@
-﻿using Carter;
+﻿using BuildingBlocks.Infrastructure.Extensions;
+using Carter;
 using Mapster;
 using MediatR;
 using Ordering.Application.CQRS.Orders.Queries.GetOrdersByUserId;
+using System.Security.Claims; 
 
 namespace Ordering.API.Endpoints.Orders
 {
@@ -11,9 +13,14 @@ namespace Ordering.API.Endpoints.Orders
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/orders/user/{userId:guid}", async (Guid userId, ISender sender) =>
+            app.MapGet("/orders/user/{userId:guid}", async (Guid userId, ClaimsPrincipal user, ISender sender) =>
             {
-                var result = await sender.Send(new GetOrdersByUserIdQuery(userId));
+                var currentUserId = user.GetUserId();
+                var isAdmin = user.IsInRole("Admin");
+
+                var query = new GetOrdersByUserIdQuery(userId, currentUserId, isAdmin);
+
+                var result = await sender.Send(query);
 
                 var response = result.Adapt<GetOrdersByUserIdResponse>();
 
@@ -21,7 +28,8 @@ namespace Ordering.API.Endpoints.Orders
             })
             .WithName("GetOrdersByUserId")
             .WithSummary("Get order history by user")
-            .WithDescription("Returns a list of all orders placed by a specific user.");
+            .WithDescription("Returns a list of all orders placed by a specific user.")
+            .RequireAuthorization(); 
         }
     }
 }

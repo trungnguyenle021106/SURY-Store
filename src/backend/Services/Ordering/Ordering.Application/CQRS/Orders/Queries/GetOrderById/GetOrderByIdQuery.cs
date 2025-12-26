@@ -29,5 +29,5 @@ namespace Ordering.Application.CQRS.Orders.Queries.GetOrderById
 
     public record GetOrderByIdResult(OrderDto Order);
 
-    public record GetOrderByIdQuery(Guid Id) : IQuery<GetOrderByIdResult>;
+    public record GetOrderByIdQuery(Guid Id, Guid UserId, bool IsAdmin) : IQuery<GetOrderByIdResult>;
 }

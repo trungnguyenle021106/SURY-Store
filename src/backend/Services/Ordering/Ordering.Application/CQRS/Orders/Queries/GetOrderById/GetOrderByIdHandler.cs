@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BuildingBlocks.Core.Exceptions; 
+using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Ordering.Application.Common.Interfaces;
 
@@ -23,6 +24,11 @@ namespace Ordering.Application.CQRS.Orders.Queries.GetOrderById
             if (order == null)
             {
                 throw new KeyNotFoundException($"Không tìm thấy đơn hàng với mã: {query.Id}");
+            }
+
+            if (order.UserId != query.UserId && !query.IsAdmin)
+            {
+                throw new ForbiddenAccessException("Bạn không có quyền xem chi tiết đơn hàng này.");
             }
 
             var orderDto = new OrderDto(

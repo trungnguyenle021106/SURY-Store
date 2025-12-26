@@ -29,7 +29,8 @@ namespace Ordering.API.Endpoints.Orders
             })
             .WithName("GetOrdersAdmin")
             .WithSummary("Get paginated orders for Admin")
-            .WithDescription("Allows admin to filter orders by status and search by name/phone with pagination.");
+            .WithDescription("Allows admin to filter orders by status and search by name/phone with pagination.")
+            .RequireAuthorization();
         }
     }
 }

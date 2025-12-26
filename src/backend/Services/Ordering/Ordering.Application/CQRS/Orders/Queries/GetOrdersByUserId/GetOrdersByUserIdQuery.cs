@@ -27,5 +27,5 @@ namespace Ordering.Application.CQRS.Orders.Queries.GetOrdersByUserId
 
     public record GetOrdersByUserIdResult(IEnumerable<OrderDto> Orders);
 
-    public record GetOrdersByUserIdQuery(Guid UserId) : IQuery<GetOrdersByUserIdResult>;
+    public record GetOrdersByUserIdQuery(Guid UserId, Guid CurrentUserId, bool IsAdmin) : IQuery<GetOrdersByUserIdResult>;
 }

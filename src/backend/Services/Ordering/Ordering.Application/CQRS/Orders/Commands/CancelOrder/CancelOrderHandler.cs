@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using BuildingBlocks.Core.Exceptions;
+using MediatR;
 using Ordering.Application.Common.Interfaces;
 
 namespace Ordering.Application.CQRS.Orders.Commands.CancelOrder
@@ -20,6 +21,11 @@ namespace Ordering.Application.CQRS.Orders.Commands.CancelOrder
             if (order == null)
             {
                 throw new KeyNotFoundException($"Không tìm thấy đơn hàng: {command.OrderId}");
+            }
+
+            if (order.UserId != command.UserId && !command.IsAdmin)
+            {
+                throw new ForbiddenAccessException("Bạn không có quyền hủy đơn hàng này.");
             }
 
             order.CancelOrder();

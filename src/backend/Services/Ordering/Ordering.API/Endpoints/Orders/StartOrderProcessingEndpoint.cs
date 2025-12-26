@@ -21,7 +21,8 @@ namespace Ordering.API.Endpoints.Orders
             })
             .WithName("StartOrderProcessing")
             .WithSummary("Start processing an order")
-            .WithDescription("Change order status from Pending to Processing.");
+            .WithDescription("Change order status from Pending to Processing.")
+            .RequireAuthorization();
         }
     }
 }

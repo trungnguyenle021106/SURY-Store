@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BuildingBlocks.Core.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Ordering.Application.Common.Interfaces;
 
@@ -15,11 +16,16 @@ namespace Ordering.Application.CQRS.Orders.Queries.GetOrdersByUserId
 
         public async Task<GetOrdersByUserIdResult> Handle(GetOrdersByUserIdQuery query, CancellationToken cancellationToken)
         {
+            if (query.UserId != query.CurrentUserId && !query.IsAdmin)
+            {
+                throw new ForbiddenAccessException("Bạn không có quyền xem lịch sử đơn hàng của người khác.");
+            }
+
             var orders = await _dbContext.Orders
-                .Include(o => o.OrderItems) 
-                .AsNoTracking() 
-                .Where(o => o.UserId == query.UserId)
-                .OrderByDescending(o => o.OrderDate) 
+                .Include(o => o.OrderItems)
+                .AsNoTracking()
+                .Where(o => o.UserId == query.UserId) 
+                .OrderByDescending(o => o.OrderDate)
                 .ToListAsync(cancellationToken);
 
             var orderDtos = orders.Select(o => new OrderDto(
@@ -32,7 +38,7 @@ namespace Ordering.Application.CQRS.Orders.Queries.GetOrdersByUserId
                     o.ShippingAddress.ReceiverName,
                     o.ShippingAddress.PhoneNumber,
                     o.ShippingAddress.Street,
-                    $"{o.ShippingAddress.Street}, {o.ShippingAddress.City}" 
+                    $"{o.ShippingAddress.Street}, {o.ShippingAddress.City}"
                 ),
                 OrderItems: o.OrderItems.Select(oi => new OrderItemDto(
                     oi.ProductId,
