@@ -24,7 +24,7 @@ namespace Identity.API.Endpoints.Users
 
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/api/users/me", async (ISender sender, ClaimsPrincipal user) =>
+            app.MapGet("/users/me", async (ISender sender, ClaimsPrincipal user) =>
             {
                 var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
 

@@ -14,7 +14,7 @@ namespace Identity.API.Endpoints.Users
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/api/users/change-password", async ([FromBody] ChangePasswordRequest request, ISender sender, ClaimsPrincipal user) =>
+            app.MapPost("/users/change-password", async ([FromBody] ChangePasswordRequest request, ISender sender, ClaimsPrincipal user) =>
             {
                 var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userIdClaim)) return Results.Unauthorized();
