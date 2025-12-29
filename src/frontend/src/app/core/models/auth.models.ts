@@ -29,3 +29,4 @@ export interface ResetPasswordRequest {
 export interface ForgotPasswordResponse {
   verifyToken: string;
 }
+

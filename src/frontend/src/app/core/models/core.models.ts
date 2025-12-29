@@ -12,3 +12,7 @@ export interface PaginatedResult<T> {
   count: number;     
   data: T[];         
 }
+
+export interface SuccessWithMessageResponse extends SuccessResponse {
+  message: string;
+}
