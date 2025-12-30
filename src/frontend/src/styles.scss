@@ -2,31 +2,36 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-:host { 
-  display: block; 
+/* PrimeNG Customization (Optional - nếu muốn đè style mặc định) */
+:root {
+    --primary-color: #10b981; /* Khớp với màu emerald-500 của Tailwind */
 }
 
-.animate-slide-in { 
-  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-}
-.animate-scale-in { 
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
-}
-.animate-fade-in { 
-  animation: fadeIn 0.3s ease-out; 
+/* Global Reset/Base styles */
+body {
+    background-color: #ffffff;
+    font-family: var(--font-family); /* Sử dụng font mặc định của PrimeNG */
+    margin: 0;
+    padding: 0;
 }
 
-@keyframes slideIn { 
-  from { transform: translateX(100%); opacity: 0; } 
-  to { transform: translateX(0); opacity: 1; } 
+/* Animation utilities (Dùng cho chữ chạy ở trang Home) */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-@keyframes scaleIn { 
-  from { transform: scale(0.95); opacity: 0; } 
-  to { transform: scale(1); opacity: 1; } 
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0; /* Mặc định ẩn để chờ animation */
 }
 
-@keyframes fadeIn { 
-  from { opacity: 0; } 
-  to { opacity: 1; } 
-}
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }

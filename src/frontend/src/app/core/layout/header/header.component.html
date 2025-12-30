@@ -1,0 +1,53 @@
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          
+          <div class="flex lg:hidden">
+            <p-button icon="pi pi-bars" [text]="true" severity="secondary" (onClick)="sidebarVisible = true"></p-button>
+          </div>
+
+          <div class="flex-shrink-0 flex items-center justify-center lg:justify-start w-full lg:w-auto absolute lg:static left-0 pointer-events-none lg:pointer-events-auto">
+            <a routerLink="/" class="text-2xl font-bold tracking-tighter text-gray-900 pointer-events-auto">
+              TINI<span class="text-primary-500">.</span>
+            </a>
+          </div>
+
+          <nav class="hidden lg:flex space-x-8">
+            <a *ngFor="let item of navItems" 
+               [routerLink]="item.path"
+               routerLinkActive="text-primary-600 font-semibold"
+               class="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors duration-200">
+              {{ item.label }}
+            </a>
+          </nav>
+
+          <div class="flex items-center space-x-2">
+            <div class="hidden sm:block relative">
+                <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" 
+                       placeholder="Tìm kiếm..." 
+                       class="pl-10 pr-4 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 rounded-full text-sm w-48 transition-all outline-none" />
+            </div>
+
+            <p-button styleClass="relative" [text]="true" severity="secondary" routerLink="/basket">
+              <i class="pi pi-shopping-bag text-xl"></i>
+              <p-badge value="2" severity="danger" styleClass="absolute -top-1 -right-1 min-w-[1.25rem] h-[1.25rem] leading-[1.25rem] text-[10px]"></p-badge>
+            </p-button>
+
+            <p-button icon="pi pi-user" [text]="true" rounded="true" severity="secondary" routerLink="/auth/login"></p-button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <p-sidebar [(visible)]="sidebarVisible">
+        <div class="flex flex-col space-y-4 mt-4">
+            <span class="text-xl font-bold mb-4">Menu</span>
+            <a *ngFor="let item of navItems" 
+               [routerLink]="item.path" 
+               (click)="sidebarVisible = false"
+               class="text-lg font-medium text-gray-800 py-2 border-b border-gray-100">
+               {{ item.label }}
+            </a>
+        </div>
+    </p-sidebar>
