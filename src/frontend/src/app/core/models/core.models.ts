@@ -13,6 +13,7 @@ export interface PaginatedResult<T> {
   data: T[];         
 }
 
-export interface SuccessWithMessageResponse extends SuccessResponse {
-  message: string;
+export interface SuccessResponse {
+  isSuccess: boolean;
+  message?: string; // Bổ sung message (Optional) cho API Change Password
 }

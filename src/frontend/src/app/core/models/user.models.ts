@@ -1,21 +1,24 @@
 import { UserAddress } from './address.models';
 
-export interface UserProfile {
+// GET /users/me
+export interface UserProfileResponse {
   id: string;
   fullName: string;
   email: string;
-  avatarUrl: string | null; // Có thể null
-  addresses: UserAddress[]; // Danh sách địa chỉ đi kèm profile
+  avatarUrl?: string; // Có thể null
+  addresses: UserAddress[]; // Danh sách địa chỉ đi kèm
 }
 
-// Request: PUT /users/profile
+// PUT /users/profile
 export interface UpdateProfileRequest {
   fullName: string;
   avatarUrl?: string;
 }
 
-// Request: POST /api/users/change-password
+// POST /users/change-password
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+// Response cho Change Password đã dùng SuccessResponse trong core.models.ts
