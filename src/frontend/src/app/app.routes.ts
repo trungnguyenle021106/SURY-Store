@@ -12,10 +12,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent) 
         // Nếu chưa có home, có thể redirect về catalog
       },
-    //   { 
-    //     path: 'catalog', 
-    //     loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES) 
-    //   },
+      { 
+        path: 'catalog', 
+        loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES) 
+      },
     //   { 
     //     path: 'basket', 
     //     loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) 
