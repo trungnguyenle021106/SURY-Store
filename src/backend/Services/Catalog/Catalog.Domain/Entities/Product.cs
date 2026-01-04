@@ -21,7 +21,7 @@ namespace Catalog.Domain.Entities
         {
             Id = Guid.NewGuid();
             Status = ProductStatus.Draft; 
-            Quantity = 0;
+            Quantity = 1;
             CategoryId = categoryId;
 
             UpdateDetails(name, price, description, imageUrl, categoryId);
