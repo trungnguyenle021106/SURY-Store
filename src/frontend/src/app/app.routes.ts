@@ -16,10 +16,18 @@ export const routes: Routes = [
         path: 'catalog', 
         loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES) 
       },
-    //   { 
-    //     path: 'basket', 
-    //     loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) 
-    //   },
+      { 
+        path: 'basket', 
+        loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) 
+      },
+      { 
+        path: 'checkout', 
+        loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent) 
+      },
+      { 
+        path: 'order-success', 
+        loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent) 
+      }
       // Các routes khác: profile, orders, checkout...
     ]
   },

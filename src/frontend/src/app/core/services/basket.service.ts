@@ -50,16 +50,16 @@ export class BasketService {
   // Payload: { items: [...] }
   updateBasket(items: CartItem[]): Observable<StoreBasketResponse> {
     const payload: StoreBasketRequest = { items };
-    
+
     return this.http.post<StoreBasketResponse>(this.baseUrl, payload).pipe(
       tap(() => {
         // Sau khi lưu thành công, cập nhật lại State cục bộ
         // Lưu ý: Ta cần giữ lại userId cũ hoặc lấy từ AuthService nếu cần
         const currentCart = this.cartSignal();
         const newTotalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        
+
         this.cartSignal.set({
-          userId: currentCart?.userId || '', 
+          userId: currentCart?.userId || '',
           items: items,
           totalPrice: newTotalPrice
         });
@@ -115,11 +115,28 @@ export class BasketService {
     // Subscribe ngay tại đây hoặc trả về Observable để Component xử lý loading/notification
     this.updateBasket(currentItems).subscribe();
   }
-  
+
   // Hàm xóa 1 sản phẩm khỏi danh sách (Frontend xử lý mảng rồi gọi update)
   removeItemFromBasket(productId: string) {
     const currentItems = this.cartSignal()?.items || [];
     const newItems = currentItems.filter(x => x.productId !== productId);
     this.updateBasket(newItems).subscribe();
+  }
+
+  setLocalCart(items: CartItem[]) {
+    // 1. Tự tính tổng tiền (Frontend tự tính vì không có Backend trả về)
+    const totalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+    // 2. Tạo đối tượng ShoppingCart giả lập
+    const fakeCart: ShoppingCart = {
+      userId: 'test-local-user', // ID giả định
+      items: items,
+      totalPrice: totalPrice
+      // Nếu interface ShoppingCart của bạn có các trường khác (clientSecret...), hãy thêm giá trị mặc định vào đây
+    };
+
+    // 3. Cập nhật trực tiếp vào Signal
+    // Lúc này: cartCount và cartTotal (computed) sẽ tự động nhảy số theo
+    this.cartSignal.set(fakeCart);
   }
 }

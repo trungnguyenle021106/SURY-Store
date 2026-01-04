@@ -1,0 +1,132 @@
+<p-toast></p-toast>
+
+<div class="bg-gray-50 min-h-screen py-12">
+  <div class="container mx-auto px-4">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng của bạn</h1>
+
+    <div *ngIf="basketService.cart() && basketService.cartCount() > 0; else emptyCart">
+      
+      <div class="flex flex-col lg:flex-row gap-8">
+        
+        <div class="flex-grow">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            
+            <div class="hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50 text-sm font-semibold text-gray-600 border-b border-gray-100">
+              <div class="col-span-6">Sản phẩm</div>
+              <div class="col-span-2 text-center">Đơn giá</div>
+              <div class="col-span-2 text-center">Số lượng</div>
+              <div class="col-span-2 text-right">Tổng</div>
+            </div>
+
+            <div *ngFor="let item of basketService.cart()?.items" 
+                 class="group relative flex flex-col md:grid md:grid-cols-12 gap-4 items-center p-4 border-b border-gray-100 last:border-0 hover:bg-pink-50/30 transition-colors">
+              
+              <div class="col-span-6 w-full flex items-center gap-4">
+                <button (click)="removeItem(item.productId)" 
+                        class="md:hidden absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2">
+                    <i class="pi pi-trash"></i>
+                </button>
+
+                <div class="w-20 h-24 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
+                  <img [src]="item.pictureUrl" [alt]="item.productName" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h3 class="font-medium text-gray-900 hover:text-pink-600 cursor-pointer" [routerLink]="['/catalog', item.productId]">
+                    {{ item.productName }}
+                  </h3>
+                  <p class="text-sm text-gray-500 md:hidden">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
+                </div>
+              </div>
+
+              <div class="col-span-2 text-center hidden md:block text-gray-600">
+                {{ item.price | currency:'VND':'symbol':'1.0-0' }}
+              </div>
+
+              <div class="col-span-2 w-full flex justify-center">
+                <p-inputNumber 
+                    [ngModel]="item.quantity" 
+                    (ngModelChange)="updateQuantity(item, $event)"
+                    [showButtons]="true" 
+                    buttonLayout="horizontal" 
+                    inputId="horizontal" 
+                    spinnerMode="horizontal" 
+                    [step]="1" 
+                    [min]="1" 
+                    inputStyleClass="w-12 text-center font-bold border-gray-300 text-sm py-1"
+                    incrementButtonIcon="pi pi-plus" 
+                    decrementButtonIcon="pi pi-minus"
+                    incrementButtonStyleClass="p-button-text p-button-sm text-gray-500"
+                    decrementButtonStyleClass="p-button-text p-button-sm text-gray-500">
+                </p-inputNumber>
+              </div>
+
+              <div class="col-span-2 w-full flex justify-between md:justify-end items-center mt-2 md:mt-0">
+                <span class="font-bold text-gray-900 md:hidden">Tổng: </span>
+                <div class="flex items-center gap-4">
+                    <span class="font-bold text-pink-600 text-lg">
+                        {{ item.price * item.quantity | currency:'VND':'symbol':'1.0-0' }}
+                    </span>
+                    <button pButton icon="pi pi-trash" [text]="true" severity="danger" 
+                            class="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity"
+                            (click)="removeItem(item.productId)"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <a routerLink="/catalog" class="text-gray-500 hover:text-pink-600 flex items-center gap-2 text-sm">
+              <i class="pi pi-arrow-left"></i> Tiếp tục mua sắm
+            </a>
+          </div>
+        </div>
+
+        <div class="w-full lg:w-96 flex-shrink-0">
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
+            <h3 class="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Đơn hàng</h3>
+            
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between text-gray-600">
+                <span>Tạm tính</span>
+                <span>{{ basketService.cartTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="flex justify-between text-gray-600">
+                <span>Giảm giá</span>
+                <span>0đ</span>
+              </div>
+              <div class="flex justify-between font-bold text-lg text-gray-900 pt-3 border-t border-gray-100">
+                <span>Tổng cộng</span>
+                <span class="text-pink-600 text-xl">{{ basketService.cartTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <button pButton label="Mua hàng (COD)" 
+                    icon="pi pi-check" iconPos="right"
+                    class="w-full bg-pink-600 border-pink-600 hover:bg-pink-700 hover:border-pink-700 shadow-lg mb-4" 
+                    size="large"
+                    routerLink="/checkout"></button>
+
+            <div class="flex items-center justify-center gap-3 text-gray-500 text-sm bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
+                 <i class="pi pi-money-bill text-green-600 text-xl"></i>
+                 <span>Thanh toán khi nhận hàng</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyCart>
+      <div class="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+            <i class="pi pi-shopping-cart text-4xl text-gray-300"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Giỏ hàng trống</h2>
+        <p class="text-gray-500 mb-8">Nàng chưa chọn được món đồ ưng ý nào ư?</p>
+        <button pButton label="Đi dạo cửa hàng ngay" routerLink="/catalog" rounded="true" class="bg-pink-600 border-pink-600"></button>
+      </div>
+    </ng-template>
+
+  </div>
+</div>
