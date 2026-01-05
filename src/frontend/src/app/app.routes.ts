@@ -17,6 +17,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES)
       },
       {
+        path: 'auth',
+        loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+      },
+      {
         path: 'basket',
         loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent)
       },
