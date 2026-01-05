@@ -1,27 +1,48 @@
-﻿using BuildingBlocks.Infrastructure.Extensions; // Import Extensions
+﻿using Identity.Application.Common.Interfaces;
+using Identity.Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
-namespace Identity.Application.CQRS.Auth.Queries.GetTokenInfo
+namespace Identity.Application.CQRS.Users.Queries.GetCurrentUserInfo;
+
+public class GetCurrentUserInfoHandler : IRequestHandler<GetCurrentUserInfoQuery, GetCurrentUserInfoResult>
 {
-    public class GetTokenInfoHandler : IRequestHandler<GetTokenInfoQuery, GetTokenInfoResult>
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IIdentityDbContext _dbContext;
+
+    public GetCurrentUserInfoHandler(UserManager<ApplicationUser> userManager, IIdentityDbContext dbContext)
     {
-        public Task<GetTokenInfoResult> Handle(GetTokenInfoQuery query, CancellationToken cancellationToken)
-        {
-            // Sử dụng Extension methods để lấy dữ liệu
-            // Code rất sạch, không có magic string
-            var userId = query.Principal.GetUserId();
-            var email = query.Principal.GetEmail();
-            var name = query.Principal.GetName();
-            var roles = query.Principal.GetRoles();
+        _userManager = userManager;
+        _dbContext = dbContext;
+    }
 
-            var tokenInfo = new TokenInfoDto(
-                Id: userId,
-                FullName: name,
-                Email: email,
-                Roles: roles
-            );
+    public async Task<GetCurrentUserInfoResult> Handle(GetCurrentUserInfoQuery query, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(query.UserId.ToString());
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
 
-            return Task.FromResult(new GetTokenInfoResult(tokenInfo));
-        }
+        var addresses = await _dbContext.UserAddresses
+            .AsNoTracking()
+            .Where(a => a.UserId == query.UserId)
+            .ToListAsync(cancellationToken);
+
+        var userInfo = new UserInfoDto(
+            Id: user.Id,
+            FullName: user.FullName,
+            Email: user.Email!,
+            AvatarUrl: user.AvatarUrl,
+            Addresses: addresses.Select(a => new UserAddressDto(
+                a.Id,
+                a.ReceiverName,
+                a.PhoneNumber,
+                a.Street,
+                a.FullAddress,
+                a.IsDefault
+            )).ToList()
+        );
+
+        return new GetCurrentUserInfoResult(userInfo);
     }
 }
