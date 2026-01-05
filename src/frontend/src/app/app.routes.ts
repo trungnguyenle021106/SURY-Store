@@ -31,6 +31,10 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES)
+      },
+      {
+        path: '**',
+        loadComponent: () => import('./core/layout/not-found/not-found.component').then(m => m.NotFoundComponent)
       }
       // Các routes khác: profile, orders, checkout...
     ]
