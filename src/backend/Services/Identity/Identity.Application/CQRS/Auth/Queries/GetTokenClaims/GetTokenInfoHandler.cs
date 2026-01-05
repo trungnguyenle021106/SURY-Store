@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Infrastructure.Extensions; // Import Extensions
+﻿using BuildingBlocks.Infrastructure.Extensions;
 using MediatR;
 
 namespace Identity.Application.CQRS.Auth.Queries.GetTokenInfo
@@ -7,8 +7,6 @@ namespace Identity.Application.CQRS.Auth.Queries.GetTokenInfo
     {
         public Task<GetTokenInfoResult> Handle(GetTokenInfoQuery query, CancellationToken cancellationToken)
         {
-            // Sử dụng Extension methods để lấy dữ liệu
-            // Code rất sạch, không có magic string
             var userId = query.Principal.GetUserId();
             var email = query.Principal.GetEmail();
             var name = query.Principal.GetName();

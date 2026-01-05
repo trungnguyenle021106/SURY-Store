@@ -14,5 +14,17 @@ namespace BuildingBlocks.Infrastructure.Extensions
         {
             return principal.FindFirstValue(ClaimTypes.Email) ?? "";
         }
+
+        public static string GetName(this ClaimsPrincipal principal)
+        {
+            return principal.FindFirstValue(ClaimTypes.Name) ?? "";
+        }
+
+        public static List<string> GetRoles(this ClaimsPrincipal principal)
+        {
+            return principal.FindAll(ClaimTypes.Role)
+                            .Select(c => c.Value)
+                            .ToList();
+        }
     }
 }
