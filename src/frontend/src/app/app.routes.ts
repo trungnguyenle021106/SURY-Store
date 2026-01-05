@@ -7,40 +7,44 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      { 
-        path: '', 
-        loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent) 
+      {
+        path: '',
+        loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
         // Nếu chưa có home, có thể redirect về catalog
       },
-      { 
-        path: 'catalog', 
-        loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES) 
+      {
+        path: 'catalog',
+        loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES)
       },
-      { 
-        path: 'basket', 
-        loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) 
+      {
+        path: 'basket',
+        loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent)
       },
-      { 
-        path: 'checkout', 
-        loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent) 
+      {
+        path: 'checkout',
+        loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent)
       },
-      { 
-        path: 'order-success', 
-        loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent) 
+      {
+        path: 'order-success',
+        loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent)
+      },
+      {
+        path: 'profile',
+        loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES)
       }
       // Các routes khác: profile, orders, checkout...
     ]
   },
-  
-  // Layout cho Auth (Đăng nhập/Đăng ký thường không có Header/Footer đầy đủ)
-//   {
-//     path: 'auth',
-//     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
-//   },
 
-//   // Layout cho Admin (Sẽ dùng layout khác, ví dụ: AdminLayoutComponent)
-//   {
-//     path: 'admin',
-//     loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)
-//   }
+  // Layout cho Auth (Đăng nhập/Đăng ký thường không có Header/Footer đầy đủ)
+  //   {
+  //     path: 'auth',
+  //     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+  //   },
+
+  //   // Layout cho Admin (Sẽ dùng layout khác, ví dụ: AdminLayoutComponent)
+  //   {
+  //     path: 'admin',
+  //     loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)
+  //   }
 ];

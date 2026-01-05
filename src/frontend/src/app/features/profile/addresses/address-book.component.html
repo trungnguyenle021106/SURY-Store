@@ -1,0 +1,90 @@
+ <p-toast></p-toast>
+    <p-confirmDialog header="Xác nhận" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+      
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-100 gap-4">
+        <h2 class="text-xl font-bold text-gray-900">Sổ địa chỉ</h2>
+        <button pButton label="Thêm địa chỉ mới" icon="pi pi-plus" (click)="openDialog()" class="bg-pink-600 border-pink-600 hover:bg-pink-700"></button>
+      </div>
+
+      <div *ngIf="isLoading" class="text-center py-8 text-gray-500">
+        <i class="pi pi-spin pi-spinner text-2xl"></i> Đang tải...
+      </div>
+
+      <div *ngIf="!isLoading && addresses.length === 0" class="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+        <p class="text-gray-500 mb-4">Bạn chưa lưu địa chỉ nào.</p>
+      </div>
+
+      <div *ngIf="!isLoading && addresses.length > 0" class="grid grid-cols-1 gap-4">
+        <div *ngFor="let addr of addresses" class="border rounded-xl p-4 relative hover:border-pink-300 transition-colors"
+             [ngClass]="{'border-pink-500 bg-pink-50/20': addr.isDefault, 'border-gray-200': !addr.isDefault}">
+          
+          <div *ngIf="addr.isDefault" class="absolute top-4 right-4">
+            <p-tag value="Mặc định" severity="danger" [rounded]="true"></p-tag>
+          </div>
+
+          <div class="pr-20"> <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-gray-900 text-lg">{{ addr.receiverName }}</span>
+              <span class="text-gray-400">|</span>
+              <span class="text-gray-600">{{ addr.phoneNumber }}</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-1">{{ addr.street }}</p>
+            <p class="text-gray-500 text-sm">{{ addr.wardDescription }}, {{ addr.city }}</p>
+          </div>
+
+          <div class="mt-4 flex gap-3 pt-3 border-t border-gray-100/50 items-center">
+            <button class="text-sm font-medium text-blue-600 hover:underline" (click)="openDialog(addr)">Cập nhật</button>
+            <button class="text-sm font-medium text-red-600 hover:underline" (click)="deleteAddress(addr.id)">Xóa</button>
+            
+            <button *ngIf="!addr.isDefault" 
+                    class="text-sm font-medium text-gray-500 hover:text-pink-600 ml-auto border border-gray-300 px-3 py-1 rounded hover:border-pink-500 transition-colors"
+                    (click)="setDefault(addr.id)">
+              Thiết lập mặc định
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p-dialog [(visible)]="displayDialog" [header]="isEditMode ? 'Cập nhật địa chỉ' : 'Địa chỉ mới'" [modal]="true" [style]="{width: '500px'}" styleClass="p-fluid">
+        <form [formGroup]="addressForm" class="flex flex-col gap-4 mt-2">
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium">Họ và tên</label>
+                    <input pInputText formControlName="receiverName" placeholder="Tên người nhận" />
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium">Số điện thoại</label>
+                    <input pInputText formControlName="phoneNumber" placeholder="10 số" />
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium">Tỉnh / Thành phố</label>
+                <input pInputText value="TP. Hồ Chí Minh" [disabled]="true" class="bg-gray-100" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium">Phường / Xã</label>
+                <p-dropdown [options]="wards" formControlName="ward" optionLabel="name" optionValue="id" placeholder="Chọn phường/xã"></p-dropdown>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium">Địa chỉ cụ thể</label>
+                <input pInputText formControlName="street" placeholder="Số nhà, tên đường" />
+            </div>
+
+            <div class="flex items-center gap-2 mt-2">
+                <p-checkbox formControlName="isDefault" [binary]="true" inputId="def"></p-checkbox>
+                <label for="def" class="text-sm cursor-pointer select-none">Đặt làm địa chỉ mặc định</label>
+            </div>
+
+        </form>
+
+        <ng-template pTemplate="footer">
+            <button pButton label="Hủy" (click)="displayDialog=false" class="p-button-text text-gray-500"></button>
+            <button pButton label="Lưu địa chỉ" (click)="saveAddress()" class="bg-pink-600 border-pink-600" [loading]="isSaving"></button>
+        </ng-template>
+    </p-dialog>
