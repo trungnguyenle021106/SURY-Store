@@ -28,7 +28,8 @@ export class LoginComponent {
   authService = inject(AuthService);
   router = inject(Router);
   messageService = inject(MessageService);
-
+  userService = inject(AuthService); 
+  
   loginForm: FormGroup;
   isLoading = false;
 
@@ -49,12 +50,23 @@ export class LoginComponent {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading = false;
-        // Đăng nhập thành công -> Về trang chủ
-        this.router.navigate(['/']);
+        this.checkUserRoleAndRedirect();
       },
       error: (err) => {
         this.isLoading = false;
-        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Email hoặc mật khẩu không đúng.' });
+
+        const errorMsg = err.error?.message || 'Email hoặc mật khẩu không đúng.';
+        this.messageService.add({ severity: 'error', summary: 'Đăng nhập thất bại', detail: errorMsg });
+      }
+    });
+  }
+
+  checkUserRoleAndRedirect() {
+    this.userService.getMe().subscribe(user => {
+      if (user.roles.includes('Admin')) {
+        this.router.navigate(['/admin/dashboard']);
+      } else {
+        this.router.navigate(['/']); // Về trang chủ khách hàng
       }
     });
   }

@@ -5,13 +5,14 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([credentialsInterceptor])),
+    provideHttpClient(withInterceptors([credentialsInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
         theme: { preset: Aura }
