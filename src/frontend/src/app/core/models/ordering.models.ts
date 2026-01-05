@@ -25,10 +25,7 @@ export interface OrderItem {
 
 export interface OrderAddress {
   street: string;
-  city: string;
-  state?: string;
-  country?: string;
-  zipCode?: string;
+  fullAddress: string;
   receiverName?: string; // Tên người nhận
   phoneNumber?: string;  // SĐT người nhận
 }

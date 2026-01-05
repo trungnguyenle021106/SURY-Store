@@ -1,0 +1,89 @@
+<p-toast></p-toast>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+  
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Quản lý danh mục</h1>
+      <p class="text-gray-500 text-sm mt-1">Phân loại sản phẩm của cửa hàng.</p>
+    </div>
+
+    <div class="flex gap-2 w-full md:w-auto">
+      <span class="p-input-icon-left w-full md:w-64">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" 
+               [(ngModel)]="keyword" 
+               (keyup.enter)="loadCategories()" 
+               placeholder="Tìm kiếm..." 
+               class="w-full" />
+      </span>
+
+      <button pButton label="Thêm mới" icon="pi pi-plus" class="bg-pink-600 border-pink-600" (click)="openNew()"></button>
+    </div>
+  </div>
+
+  <p-table [value]="categories" 
+           [lazy]="true" 
+           (onLazyLoad)="loadCategories($event)"
+           [paginator]="true" 
+           [rows]="pageSize" 
+           [totalRecords]="totalRecords" 
+           [loading]="isLoading"
+           [rowsPerPageOptions]="[10, 20, 50]"
+           styleClass="p-datatable-sm"
+           responsiveLayout="scroll">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 100px">Mã</th>
+        <th>Tên danh mục</th>
+        <th style="width: 150px; text-align: center">Thao tác</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-category>
+      <tr>
+        <td><span class="text-gray-500 text-xs">#{{ category.id | slice:0:6 }}</span></td>
+        <td class="font-medium text-gray-800 text-base">{{ category.name }}</td>
+        <td style="text-align: center">
+          <button pButton icon="pi pi-pencil" 
+                  class="p-button-rounded p-button-text p-button-warning mr-2" 
+                  pTooltip="Sửa" 
+                  (click)="editCategory(category)"></button>
+          
+          </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="text-center py-8 text-gray-500">
+          Không tìm thấy danh mục nào.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+</div>
+
+<p-dialog [(visible)]="displayDialog" 
+          [header]="isEditMode ? 'Cập nhật danh mục' : 'Thêm danh mục mới'" 
+          [modal]="true" 
+          [style]="{width: '450px'}" 
+          styleClass="p-fluid">
+  
+  <form [formGroup]="categoryForm" class="mt-4">
+    <div class="field">
+      <label for="name" class="font-medium text-gray-900 block mb-2">Tên danh mục <span class="text-red-500">*</span></label>
+      <input pInputText id="name" formControlName="name" placeholder="Ví dụ: Áo Sơ Mi" autofocus />
+      <small *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" class="text-red-500 block mt-1">
+        Tên danh mục không được để trống.
+      </small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Hủy" icon="pi pi-times" (click)="displayDialog = false" class="p-button-text text-gray-500"></button>
+    <button pButton label="Lưu" icon="pi pi-check" (click)="saveCategory()" class="bg-pink-600 border-pink-600" [loading]="isSaving"></button>
+  </ng-template>
+</p-dialog>
