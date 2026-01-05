@@ -30,3 +30,9 @@ export interface ForgotPasswordResponse {
   verifyToken: string;
 }
 
+export interface AuthUserInfo {
+  id: string;
+  fullName: string;
+  email: string;
+  roles: string[]; // Quan trọng để phân quyền (Customer/Admin)
+}

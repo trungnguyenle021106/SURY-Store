@@ -1,19 +1,27 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
+import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 
 export const routes: Routes = [
   // 1. LAYOUT KHÁCH HÀNG (Có Header/Footer hồng)
   {
     path: '',
-    component: MainLayoutComponent, 
+    component: MainLayoutComponent,
     children: [
       { path: '', loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent) },
       { path: 'catalog', loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES) },
       { path: 'basket', loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) },
-      { path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent) },
+      {
+        path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
+        canActivate: [authGuard]
+      },
       { path: 'order-success', loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent) },
-      { path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES) },
+      {
+        path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES),
+        canActivate: [authGuard]
+      },
     ]
   },
 
@@ -27,12 +35,13 @@ export const routes: Routes = [
   // LƯU Ý: Phải nằm NGANG HÀNG với MainLayoutComponent ở trên, KHÔNG được nằm trong children của nó.
   {
     path: 'admin',
-    loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
+    canActivate: [adminGuard]
   },
 
   // 4. TRANG 404 (Luôn nằm cuối cùng)
-  { 
-    path: '**', 
-    loadComponent: () => import('./core/layout/not-found/not-found.component').then(m => m.NotFoundComponent) 
+  {
+    path: '**',
+    loadComponent: () => import('./core/layout/not-found/not-found.component').then(m => m.NotFoundComponent)
   }
 ];

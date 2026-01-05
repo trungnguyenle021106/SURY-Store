@@ -62,7 +62,7 @@ export class LoginComponent {
   }
 
   checkUserRoleAndRedirect() {
-    this.userService.getMe().subscribe(user => {
+    this.userService.getTokenInfo().subscribe(user => {
       if (user.roles.includes('Admin')) {
         this.router.navigate(['/admin/dashboard']);
       } else {

@@ -8,11 +8,12 @@ import { credentialsInterceptor } from './core/interceptors/credentials.intercep
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([credentialsInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([credentialsInterceptor, errorInterceptor, authInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
         theme: { preset: Aura }
