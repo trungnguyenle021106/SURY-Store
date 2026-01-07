@@ -31,9 +31,11 @@
           <div class="relative inline-flex items-center">
             <i class="pi pi-shopping-bag text-xl"></i>
 
-            <p-badge value="2" severity="danger"
+            <p-badge *ngIf="basketService.cartCount() > 0" [value]="basketService.cartCount().toString()"
+              severity="danger"
               styleClass="absolute -top-2 -right-2 min-w-[1.1rem] h-[1.1rem] leading-[1.1rem] text-[9px] px-0 flex items-center justify-center">
             </p-badge>
+
           </div>
         </p-button>
 

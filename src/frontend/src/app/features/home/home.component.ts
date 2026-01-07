@@ -44,12 +44,12 @@ export class HomeComponent implements OnInit {
 
   // Utils cho HTML dùng
   ProductStatus = ProductStatus;
-  
-  ngOnInit(): void {
-    // this.loadFeaturedProducts();
-    // this.loadCategories();
 
-    this.simulateApiCall();
+  ngOnInit(): void {
+    this.loadFeaturedProducts();
+    this.loadCategories();
+
+    // this.simulateApiCall();
   }
 
   simulateApiCall() {
@@ -57,7 +57,7 @@ export class HomeComponent implements OnInit {
     setTimeout(() => {
       this.categories = MOCK_CATEGORIES;
       this.featuredProducts = MOCK_PRODUCTS;
-      
+
       this.isLoadingCategories = false;
       this.isLoadingProducts = false;
     }, 1500);
@@ -69,9 +69,15 @@ export class HomeComponent implements OnInit {
     this.productService.getProducts(1, 8)
       .pipe(finalize(() => this.isLoadingProducts = false))
       .subscribe({
-        next: (response) => {
+        next: (response: any) => {
           // Chỉ lấy sản phẩm Active (Đang bán) để hiển thị trang chủ
-          this.featuredProducts = response.data.filter(p => p.status === ProductStatus.Active);
+          if (response.products && Array.isArray(response.products.data)) {
+            this.featuredProducts = response.products.data;
+          } else {
+            this.featuredProducts = [];
+          }
+
+          // this.featuredProducts = response.data.filter(p => p.status === ProductStatus.Active);
         },
         error: (err) => console.error('Lỗi tải sản phẩm:', err)
       });
@@ -79,12 +85,15 @@ export class HomeComponent implements OnInit {
 
   loadCategories() {
     this.isLoadingCategories = true;
-    // Lấy trang 1, 4 danh mục
     this.categoryService.getCategories(1, 4)
       .pipe(finalize(() => this.isLoadingCategories = false))
       .subscribe({
-        next: (response) => {
-          this.categories = response.data;
+        next: (response: any) => {
+          if (response.categories && Array.isArray(response.categories.data)) {
+            this.categories = response.categories.data;
+          } else {
+            this.categories = [];
+          }
         },
         error: (err) => console.error('Lỗi tải danh mục:', err)
       });

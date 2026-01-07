@@ -1,107 +1,121 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap, catchError, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { CartItem, CheckoutBasketRequest, GetBasketResponse, ShoppingCart, StoreBasketRequest, StoreBasketResponse } from '../models/basket.models';
 import { SuccessResponse } from '../models/core.models';
-
+import { AuthService } from './auth.service'; // Import AuthService
 
 @Injectable({
   providedIn: 'root'
 })
 export class BasketService {
   private http = inject(HttpClient);
+  private authService = inject(AuthService); // Inject AuthService
   private baseUrl = `${environment.apiUrl}/basket`;
+  private readonly CART_STORAGE_KEY = 'shop_cart_data';
 
-  // --- STATE MANAGEMENT (Angular 19 Signals) ---
-  // Lưu trữ giỏ hàng hiện tại để UI (Header, Cart Page) binding dữ liệu
+  // --- STATE MANAGEMENT ---
   private cartSignal = signal<ShoppingCart | null>(null);
 
-  // Selector: Tổng số lượng item (dùng cho Badge trên Header)
   cartCount = computed(() => {
     const cart = this.cartSignal();
     return cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
   });
 
-  // Selector: Tổng tiền (Frontend tự tính hiển thị tạm thời, hoặc dùng totalPrice từ Backend)
   cartTotal = computed(() => this.cartSignal()?.totalPrice ?? 0);
 
-  // Public Signal để Component đọc dữ liệu
+  // Expose ra ngoài cho Component dùng (Readonly)
   cart = this.cartSignal.asReadonly();
 
-  // --- API METHODS ---
+  constructor() {
+    // 1. Luôn load Local Storage trước (để UI có dữ liệu ngay lập tức)
+    this.loadFromLocalStorage();
 
-  // 1. GET /basket
-  getBasket(): Observable<GetBasketResponse> {
+    // 2. [MỚI] Sử dụng effect để theo dõi trạng thái Login
+    // Bất cứ khi nào authService.currentUser() thay đổi (Login/Logout/F5), đoạn code này sẽ chạy
+    effect(() => {
+      const user = this.authService.currentUser();
+      
+      if (user) {
+        // A. Nếu User ĐÃ đăng nhập: Gọi API lấy giỏ hàng từ Server về
+        // (Server là nguồn chuẩn, sẽ ghi đè LocalStorage để đồng bộ)
+        this.getBasket().subscribe(); 
+      } else {
+        // B. Nếu User CHƯA đăng nhập (hoặc vừa Logout):
+        // Ta giữ nguyên LocalStorage hiện tại (chế độ Guest)
+        // Hoặc muốn bảo mật hơn thì xóa giỏ hàng khi logout:
+        // this.updateLocalState(null); 
+      }
+    });
+  }
+
+  // --- HELPER QUAN TRỌNG: UPDATE LOCAL STATE ---
+  private updateLocalState(cart: ShoppingCart | null) {
+    this.cartSignal.set(cart);
+    if (cart) {
+      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(cart));
+    } else {
+      localStorage.removeItem(this.CART_STORAGE_KEY);
+    }
+  }
+
+  private loadFromLocalStorage() {
+    const json = localStorage.getItem(this.CART_STORAGE_KEY);
+    if (json) {
+      try {
+        const cart = JSON.parse(json) as ShoppingCart;
+        this.cartSignal.set(cart);
+      } catch {
+        localStorage.removeItem(this.CART_STORAGE_KEY);
+      }
+    }
+  }
+
+  // --- HELPER: CHECK LOGIN STATUS ---
+  // Sử dụng trực tiếp Signal từ AuthService
+  private get isLoggedIn(): boolean {
+    return !!this.authService.currentUser();
+  }
+
+  // --- API CALLS (PRIVATE/INTERNAL) ---
+  
+  // Lấy giỏ hàng từ Server
+  private getBasket(): Observable<GetBasketResponse> {
     return this.http.get<GetBasketResponse>(this.baseUrl).pipe(
       tap(response => {
-        // Cập nhật State khi lấy dữ liệu về thành công
-        this.cartSignal.set(response.cart);
+        // Lấy về thành công -> Cập nhật LocalStorage luôn
+        this.updateLocalState(response.cart);
       }),
       catchError(err => {
-        // Trường hợp giỏ hàng rỗng hoặc lỗi 404, set null
-        this.cartSignal.set(null);
-        throw err;
+        // Lỗi (VD: chưa có giỏ trên server) -> Giữ nguyên Local hoặc set null tùy logic
+        // Ở đây ta không làm gì để tránh mất giỏ hàng Guest đang có
+        return of({ cart: this.cartSignal() } as GetBasketResponse);
       })
     );
   }
 
-  // 2. POST /basket (Lưu giỏ hàng)
-  // Payload: { items: [...] }
-  updateBasket(items: CartItem[]): Observable<StoreBasketResponse> {
+  private updateBasketApi(items: CartItem[]): Observable<StoreBasketResponse> {
     const payload: StoreBasketRequest = { items };
-
-    return this.http.post<StoreBasketResponse>(this.baseUrl, payload).pipe(
-      tap(() => {
-        // Sau khi lưu thành công, cập nhật lại State cục bộ
-        // Lưu ý: Ta cần giữ lại userId cũ hoặc lấy từ AuthService nếu cần
-        const currentCart = this.cartSignal();
-        const newTotalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
-        this.cartSignal.set({
-          userId: currentCart?.userId || '',
-          items: items,
-          totalPrice: newTotalPrice
-        });
-      })
-    );
+    return this.http.post<StoreBasketResponse>(this.baseUrl, payload);
   }
 
-  // 3. POST /basket/checkout (Thanh toán COD)
-  checkout(payload: CheckoutBasketRequest): Observable<SuccessResponse> {
-    return this.http.post<SuccessResponse>(`${this.baseUrl}/checkout`, payload).pipe(
-      tap(res => {
-        if (res.isSuccess) {
-          // Thanh toán thành công -> Xóa giỏ hàng trong State
-          this.cartSignal.set(null);
-        }
-      })
-    );
+  private deleteBasketApi(): Observable<SuccessResponse> {
+    return this.http.delete<SuccessResponse>(this.baseUrl);
   }
 
-  // 4. DELETE /basket (Xóa giỏ)
-  deleteBasket(): Observable<SuccessResponse> {
-    return this.http.delete<SuccessResponse>(this.baseUrl).pipe(
-      tap(res => {
-        if (res.isSuccess) {
-          this.cartSignal.set(null);
-        }
-      })
-    );
-  }
+  // --- PUBLIC ACTIONS (Dùng cho Component) ---
 
-  // --- HELPER METHODS (Logic phía Frontend) ---
-
-  // Hàm thêm sản phẩm vào giỏ (Logic xử lý mảng items trước khi gọi API)
-  addItemToBasket(product: any, quantity: number = 1) {
-    const currentItems = this.cartSignal()?.items ? [...this.cartSignal()!.items] : [];
+  // 1. THÊM VÀO GIỎ
+  addItemToBasket(product: any, quantity: number = 1): Observable<any> {
+    // A. Logic tính toán (Client Side)
+    const previousCart = this.cartSignal();
+    const currentItems = previousCart?.items ? [...previousCart.items] : [];
+    
     const existingItemIndex = currentItems.findIndex(x => x.productId === product.id);
-
     if (existingItemIndex !== -1) {
-      // Đã có -> Tăng số lượng
       currentItems[existingItemIndex].quantity += quantity;
     } else {
-      // Chưa có -> Thêm mới
       currentItems.push({
         productId: product.id,
         productName: product.name,
@@ -111,32 +125,69 @@ export class BasketService {
       });
     }
 
-    // Gọi API update
-    // Subscribe ngay tại đây hoặc trả về Observable để Component xử lý loading/notification
-    this.updateBasket(currentItems).subscribe();
-  }
-
-  // Hàm xóa 1 sản phẩm khỏi danh sách (Frontend xử lý mảng rồi gọi update)
-  removeItemFromBasket(productId: string) {
-    const currentItems = this.cartSignal()?.items || [];
-    const newItems = currentItems.filter(x => x.productId !== productId);
-    this.updateBasket(newItems).subscribe();
-  }
-
-  setLocalCart(items: CartItem[]) {
-    // 1. Tự tính tổng tiền (Frontend tự tính vì không có Backend trả về)
-    const totalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
-    // 2. Tạo đối tượng ShoppingCart giả lập
-    const fakeCart: ShoppingCart = {
-      userId: 'test-local-user', // ID giả định
-      items: items,
-      totalPrice: totalPrice
-      // Nếu interface ShoppingCart của bạn có các trường khác (clientSecret...), hãy thêm giá trị mặc định vào đây
+    // Tính tổng tiền tạm (Client)
+    const newTotal = currentItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    
+    // Tạo object giỏ hàng mới
+    // Lưu ý: Nếu chưa login, dùng tạm userId là 'guest'
+    const newCart: ShoppingCart = {
+      userId: this.authService.currentUser()?.id || 'guest', 
+      items: currentItems,
+      totalPrice: newTotal
     };
 
-    // 3. Cập nhật trực tiếp vào Signal
-    // Lúc này: cartCount và cartTotal (computed) sẽ tự động nhảy số theo
-    this.cartSignal.set(fakeCart);
+    // B. Cập nhật UI ngay lập tức (Optimistic)
+    this.updateLocalState(newCart);
+
+    // C. Phân nhánh xử lý Guest vs User
+    if (this.isLoggedIn) {
+      // User thật: Gọi API lưu lên Server
+      return this.updateBasketApi(currentItems);
+    } else {
+      // Guest: Chỉ lưu Local (đã làm ở bước B) -> Trả về Success giả để Component hiện thông báo
+      return of({ success: true, message: 'Saved to local storage' });
+    }
+  }
+
+  // 2. XÓA KHỎI GIỎ
+  removeItemFromBasket(productId: string): Observable<any> {
+    const previousCart = this.cartSignal();
+    if (!previousCart) return of(null);
+
+    const newItems = previousCart.items.filter(x => x.productId !== productId);
+    
+    // Nếu xóa hết sạch
+    if (newItems.length === 0) {
+        this.updateLocalState(null);
+        return this.isLoggedIn ? this.deleteBasketApi() : of(true);
+    }
+
+    const newTotal = newItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const newCart: ShoppingCart = { ...previousCart, items: newItems, totalPrice: newTotal };
+
+    this.updateLocalState(newCart);
+
+    if (this.isLoggedIn) {
+        return this.updateBasketApi(newItems);
+    } else {
+        return of(true);
+    }
+  }
+
+  // 3. CHECKOUT
+  checkout(payload: CheckoutBasketRequest): Observable<SuccessResponse> {
+    // Chặn ngay nếu chưa Login
+    if (!this.isLoggedIn) {
+      return throwError(() => new Error('Vui lòng đăng nhập để thanh toán'));
+    }
+
+    return this.http.post<SuccessResponse>(`${this.baseUrl}/checkout`, payload).pipe(
+      tap(res => {
+        if (res.isSuccess) {
+          // Thanh toán xong -> Xóa sạch giỏ
+          this.updateLocalState(null);
+        }
+      })
+    );
   }
 }

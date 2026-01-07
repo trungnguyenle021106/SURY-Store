@@ -10,13 +10,27 @@ export class ProductService {
     private http = inject(HttpClient);
     private baseUrl = `${environment.apiUrl}/products`;
 
-    getProducts(pageNumber: number = 1, pageSize: number = 10, keyword?: string): Observable<ProductListResponse> {
+    getProducts(
+        pageNumber: number = 1,
+        pageSize: number = 10,
+        keyword?: string,
+        categoryId?: string,
+        excludeId?: string
+    ): Observable<ProductListResponse> {
+
         let params = new HttpParams()
-            .set('pageNumber', pageNumber) // Lưu ý: API spec ghi là pageNumber
+            .set('pageNumber', pageNumber)
             .set('pageSize', pageSize);
 
         if (keyword) {
             params = params.set('keyword', keyword);
+        }
+        if (categoryId) {
+            params = params.set('categoryId', categoryId);
+        }
+
+        if (excludeId) {
+            params = params.set('excludeId', excludeId);
         }
 
         return this.http.get<ProductListResponse>(this.baseUrl, { params });
