@@ -27,7 +27,7 @@ namespace Catalog.API.Endpoints.Categories
             .WithName("UpdateCategory")
             .WithSummary("Update category")
             .WithDescription("Update the name of an existing category.")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

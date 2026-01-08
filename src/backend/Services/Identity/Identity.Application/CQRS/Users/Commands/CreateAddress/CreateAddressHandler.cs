@@ -28,7 +28,14 @@ namespace Identity.Application.CQRS.Users.Commands.CreateAddress
                     _dbContext.UserAddresses.Update(existingDefault);
                 }
             }
-            var newAddress = command.Adapt<UserAddress>();
+            var newAddress = new UserAddress(
+                  command.UserId,
+                  command.ReceiverName,
+                  command.PhoneNumber,
+                  command.Street,
+                  command.Ward,
+                  command.IsDefault
+              );
             await _dbContext.UserAddresses.AddAsync(newAddress, cancellationToken);
 
             return new CreateAddressResult(newAddress.Id);

@@ -33,7 +33,7 @@ namespace Catalog.API.Endpoints.Products
             .WithName("CreateBatchProducts")
             .WithSummary("Create multiple products")
             .WithDescription("Create a batch of new products into the catalog")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Catalog.API.Endpoints.Products
             .WithName("DiscontinueProduct")
             .WithSummary("Discontinue a product")
             .WithDescription("Change product status to Discontinued")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Identity.API.Endpoints.Users
                 var query = new GetCurrentUserInfoQuery(Guid.Parse(userIdClaim));
                 var result = await sender.Send(query);
 
-                var response = result.Adapt<GetCurrentUserInfoResponse>();
+                var response = result.User.Adapt<GetCurrentUserInfoResponse>();
 
                 return Results.Ok(response);
             })

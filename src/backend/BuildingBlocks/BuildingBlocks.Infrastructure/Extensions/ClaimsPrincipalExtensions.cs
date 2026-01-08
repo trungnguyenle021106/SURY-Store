@@ -17,7 +17,14 @@ namespace BuildingBlocks.Infrastructure.Extensions
 
         public static string GetName(this ClaimsPrincipal principal)
         {
-            return principal.FindFirstValue(ClaimTypes.Name) ?? "";
+            var name = principal.FindFirstValue("name");
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = principal.FindFirstValue(ClaimTypes.Name);
+            }
+
+            return name ?? "";
         }
 
         public static List<string> GetRoles(this ClaimsPrincipal principal)

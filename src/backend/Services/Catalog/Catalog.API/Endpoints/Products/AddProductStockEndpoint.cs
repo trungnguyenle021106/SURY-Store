@@ -27,7 +27,7 @@ namespace Catalog.API.Endpoints.Products
             .WithName("AddProductStock")
             .WithSummary("Add stock to product")
             .WithDescription("Increase the quantity of a product inside the catalog")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

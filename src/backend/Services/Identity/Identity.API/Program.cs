@@ -46,9 +46,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
-builder.Services.AddAuthorization(options =>
-{
-});
+builder.Services.AddCustomAuthorization();
 
 builder.Services.AddCustomCors(builder.Configuration);
 

@@ -27,7 +27,7 @@ namespace Catalog.API.Endpoints.Categories
             .WithName("CreateCategory")
             .WithSummary("Create new category")
             .WithDescription("Create a new product category.")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

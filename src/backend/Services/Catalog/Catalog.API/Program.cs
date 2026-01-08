@@ -20,7 +20,7 @@ builder.Services.AddCustomMediatR(
         cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
     }
 );
-builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration);
+builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration, typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
@@ -29,9 +29,7 @@ builder.Services.AddCustomCors(builder.Configuration);
 builder.Services.AddCarter();
 
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
-builder.Services.AddAuthorization(options =>
-{
-});
+builder.Services.AddCustomAuthorization();
 
 var app = builder.Build();
 

@@ -43,7 +43,7 @@ namespace Catalog.API.Endpoints.Products
             .WithName("CreateProduct")
             .WithSummary("Create a new product")
             .WithDescription("Create a new product into the catalog")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

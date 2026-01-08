@@ -28,12 +28,18 @@ namespace Catalog.API.Endpoints.Products
                 [FromQuery] int? pageNumber,
                 [FromQuery] int? pageSize,
                 [FromQuery] string? keyword,
+                [FromQuery] Guid? categoryId,
+                [FromQuery] Guid? excludeId,
+                [FromQuery] bool? includeDrafts, // <--- 1. Thêm tham số này (mặc định null/false)
                 ISender sender) =>
             {
                 var query = new GetProductsQuery(
                     pageNumber ?? 1,
                     pageSize ?? 10,
-                    keyword
+                    keyword,
+                    categoryId,
+                    excludeId,
+                    includeDrafts ?? false // <--- 2. Truyền vào Query
                 );
 
                 var result = await sender.Send(query);
@@ -43,8 +49,8 @@ namespace Catalog.API.Endpoints.Products
                 return Results.Ok(response);
             })
             .WithName("GetProducts")
-            .WithSummary("Get paginated products with search")
-            .WithDescription("Get products list with pagination and search support");
+            .WithSummary("Get paginated products with search and filter")
+            .WithDescription("Get products list with pagination, search, category filter, exclusion support and draft inclusion option");
         }
     }
 }

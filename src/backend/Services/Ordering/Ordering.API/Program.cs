@@ -14,6 +14,10 @@ builder.Services.AddCustomDbContext<OrderingDbContext, IOrderingDbContext>(optio
 });
 builder.Services.AddCustomExceptionHandler();
 builder.Services.AddCustomMapster(typeof(Ordering.Application.AssemblyReference).Assembly);
+builder.Services.AddCustomMassTransitWithRabbitMq(
+    builder.Configuration,
+    typeof(Ordering.Application.AssemblyReference).Assembly 
+);
 builder.Services.AddCustomMediatR(
     typeof(Ordering.Application.AssemblyReference).Assembly,
     cfg =>
@@ -23,9 +27,7 @@ builder.Services.AddCustomMediatR(
 );
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
-builder.Services.AddAuthorization(options =>
-{
-});
+builder.Services.AddCustomAuthorization();
 builder.Services.AddCustomCors(builder.Configuration);
 
 builder.Services.AddCarter();

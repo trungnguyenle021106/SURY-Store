@@ -22,7 +22,7 @@ namespace Ordering.API.Endpoints.Orders
             .WithName("CompleteOrder")
             .WithSummary("Mark order as completed")
             .WithDescription("Change order status from Shipping to Completed.")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

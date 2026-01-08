@@ -24,7 +24,7 @@ namespace Catalog.API.Endpoints.Products
             .WithName("ActivateProduct")
             .WithSummary("Activate a product")
             .WithDescription("Change product status to Active")
-            .RequireAuthorization();
+            .RequireAuthorization("AdminOnly");
         }
     }
 }

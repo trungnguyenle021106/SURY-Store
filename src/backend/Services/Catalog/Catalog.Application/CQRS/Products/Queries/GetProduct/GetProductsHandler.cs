@@ -1,6 +1,7 @@
 ﻿using BuildingBlocks.Application.Extensions;
 using Catalog.Application.Common.Interfaces;
 using Catalog.Domain.Entities;
+using Catalog.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,18 +19,33 @@ namespace Catalog.Application.CQRS.Products.Queries.GetProduct
         public async Task<GetProductsResult> Handle(GetProductsQuery query, CancellationToken cancellationToken)
         {
             var productsQuery = _dbContext.Products
-                .AsNoTracking(); 
+                .AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(query.Keyword))
             {
-                var keyword = query.Keyword.Trim(); 
-
+                var keyword = query.Keyword.Trim();
                 productsQuery = productsQuery.Where(p =>
                     p.Name.Contains(keyword) ||
                     p.Description.Contains(keyword));
             }
+
+            if (!query.IncludeDrafts)
+            {
+                productsQuery = productsQuery.Where(p => p.Status != ProductStatus.Draft);
+            }
+
+            if (query.CategoryId.HasValue)
+            {
+                productsQuery = productsQuery.Where(p => p.CategoryId == query.CategoryId.Value);
+            }
+
+            if (query.ExcludeId.HasValue)
+            {
+                productsQuery = productsQuery.Where(p => p.Id != query.ExcludeId.Value);
+            }
+
             var paginatedProducts = await productsQuery
-                .OrderBy(p => p.Name)
+                .OrderBy(p => p.Name) 
                 .ToPaginatedListAsync<Product, ProductDto>(
                     query.PageNumber,
                     query.PageSize,

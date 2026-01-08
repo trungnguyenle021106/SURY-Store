@@ -26,10 +26,9 @@ namespace Identity.API.Endpoints.Auth
                 }
 
                 var query = new GetTokenInfoQuery(user);
-
                 var result = await sender.Send(query);
 
-                var response = result.Adapt<GetTokenInfoResponse>();
+                var response = result.UserInfo.Adapt<GetTokenInfoResponse>();
 
                 return Results.Ok(response);
             })

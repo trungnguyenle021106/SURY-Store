@@ -30,7 +30,7 @@ namespace Identity.Application.CQRS.Users.Commands.ChangePassword
                 var error = result.Errors.FirstOrDefault();
                 var vietnameseMessage = MapIdentityErrorToVietnamese(error?.Code, error?.Description);
 
-                throw new ValidationException(vietnameseMessage);
+                throw new DomainException(vietnameseMessage);
             }
 
             return new ChangePasswordResult(true, "Đổi mật khẩu thành công.");
