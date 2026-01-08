@@ -17,13 +17,15 @@ import { TooltipModule } from 'primeng/tooltip';
 // Services & Models
 import { OrderService } from '../../../core/services/order.service';
 import { OrderDetail, OrderSummary, OrderStatus } from '../../../core/models/ordering.models';
-import { OrderStatusLabel, OrderStatusSeverity } from '../../../shared/utils/order-status.util';
+// Nhớ import parseOrderStatus
+import { OrderStatusLabel, OrderStatusSeverity, parseOrderStatus } from '../../../shared/utils/order-status.util';
 
 @Component({
   selector: 'app-order-list',
+  standalone: true,
   imports: [
     CommonModule, FormsModule,
-    TableModule, ButtonModule, InputTextModule, DropdownModule, 
+    TableModule, ButtonModule, InputTextModule, DropdownModule,
     DialogModule, TagModule, ToastModule, ConfirmDialogModule, TooltipModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -37,8 +39,8 @@ export class OrderListComponent implements OnInit {
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
 
-  // Data List (Dùng OrderSummary)
-  orders: OrderSummary[] = []; 
+  // Data List
+  orders: OrderSummary[] = [];
   totalRecords = 0;
   isLoading = false;
 
@@ -54,19 +56,19 @@ export class OrderListComponent implements OnInit {
     value: +key
   }));
 
-  // Detail Dialog (Dùng OrderDetail)
+  // Detail Dialog
   displayDialog = false;
   selectedOrder: OrderDetail | null = null;
   isLoadingDetail = false;
 
   // Utils
   OrderStatus = OrderStatus;
-  getStatusLabel = (s: number) => OrderStatusLabel[s];
-  getStatusSeverity = (s: number) => OrderStatusSeverity[s];
+  
+  // Dùng parseOrderStatus để hiển thị đúng Label/Màu dù BE trả về chuỗi hay số
+  getStatusLabel = (s: any) => OrderStatusLabel[parseOrderStatus(s)];
+  getStatusSeverity = (s: any) => OrderStatusSeverity[parseOrderStatus(s)];
 
-  ngOnInit(): void {
-    this.loadOrders();
-  }
+  ngOnInit(): void {}
 
   // 1. Load danh sách
   loadOrders(event?: any) {
@@ -77,14 +79,12 @@ export class OrderListComponent implements OnInit {
     }
 
     this.orderService.getOrdersForAdmin(
-      this.currentPage, 
-      this.pageSize, 
-      this.selectedStatus ?? undefined, 
+      this.currentPage,
+      this.pageSize,
+      this.selectedStatus ?? undefined,
       this.searchTerm
     ).subscribe({
       next: (res) => {
-        // Model AdminOrderListResponse kế thừa PaginatedResult<OrderSummary>
-        // nên dữ liệu nằm trong res.data
         this.orders = res.data;
         this.totalRecords = res.count;
         this.isLoading = false;
@@ -92,51 +92,64 @@ export class OrderListComponent implements OnInit {
       error: () => {
         this.isLoading = false;
         this.orders = [];
+        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được danh sách đơn hàng' });
       }
     });
   }
 
-  // 2. Xem chi tiết
+  // 2. Xem chi tiết (ĐÃ FIX LOGIC STATUS)
   viewOrder(orderId: string) {
     this.displayDialog = true;
     this.isLoadingDetail = true;
     this.selectedOrder = null;
 
     this.orderService.getOrderById(orderId).subscribe({
-      next: (res) => {
-        this.selectedOrder = res; // res là OrderDetail
+      next: (res: any) => {
+        // Lấy object data (xử lý trường hợp BE bọc trong .order hoặc trả về trực tiếp)
+        const rawData = res.order || res;
+        
+        // --- QUAN TRỌNG: Ép kiểu status về số (Number) ngay tại đây ---
+        // Để các điều kiện *ngIf trong HTML so sánh đúng với Enum
+        this.selectedOrder = {
+            ...rawData,
+            status: parseOrderStatus(rawData.status) 
+        };
+        
         this.isLoadingDetail = false;
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được chi tiết đơn hàng' });
         this.displayDialog = false;
+        this.isLoadingDetail = false;
       }
     });
   }
 
-  // 3. Xử lý trạng thái (Giữ nguyên logic cũ nhưng map đúng ID)
-  changeStatus(action: string) {
+  // 3. Cập nhật trạng thái
+  changeStatus(action: 'process' | 'ship' | 'complete' | 'cancel') {
     if (!this.selectedOrder) return;
-    const id = this.selectedOrder.id; // Dùng ID (Guid) để gọi API
+    const id = this.selectedOrder.id;
 
     let message = '';
+    let header = 'Xác nhận';
     let apiCall;
 
     switch (action) {
-      case 'process': // Submitted -> Processing/StockConfirmed
-        message = 'Xác nhận đơn hàng và chuẩn bị hàng?';
+      case 'process':
+        message = 'Xác nhận đơn hàng và chuyển sang trạng thái Đang xử lý?';
         apiCall = this.orderService.startProcessing(id);
         break;
-      case 'ship': // StockConfirmed -> Shipped
-        message = 'Xác nhận giao cho Shipper?';
+      case 'ship':
+        message = 'Đơn hàng đã đóng gói xong và bàn giao cho Shipper?';
         apiCall = this.orderService.shipOrder(id);
         break;
-      case 'complete': // Shipped -> Completed
-        message = 'Xác nhận đơn hàng đã hoàn thành?';
+      case 'complete':
+        message = 'Khách đã nhận hàng và thanh toán thành công?';
         apiCall = this.orderService.completeOrder(id);
         break;
       case 'cancel':
         message = 'Bạn có chắc chắn muốn HỦY đơn hàng này?';
+        header = 'Hủy đơn hàng';
         apiCall = this.orderService.cancelOrder(id);
         break;
       default: return;
@@ -144,7 +157,7 @@ export class OrderListComponent implements OnInit {
 
     this.confirmationService.confirm({
       message: message,
-      header: 'Xác nhận thao tác',
+      header: header,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Đồng ý',
       rejectLabel: 'Hủy',
@@ -152,13 +165,31 @@ export class OrderListComponent implements OnInit {
       accept: () => {
         apiCall.subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Cập nhật trạng thái thành công' });
-            this.displayDialog = false;
-            this.loadOrders();
+            this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật trạng thái' });
+            
+            // Cập nhật lại UI Dialog ngay lập tức để nút bấm thay đổi theo
+            if (this.selectedOrder) {
+                // Tự động chuyển status client-side để UI update luôn không cần tắt dialog
+                if (action === 'process') this.selectedOrder.status = OrderStatus.Processing;
+                if (action === 'ship') this.selectedOrder.status = OrderStatus.Shipping;
+                if (action === 'complete') this.selectedOrder.status = OrderStatus.Completed;
+                if (action === 'cancel') this.selectedOrder.status = OrderStatus.Cancelled;
+            }
+            
+            // Reload lại bảng danh sách nền
+            this.loadOrders(); 
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể cập nhật trạng thái' })
+          error: (err) => {
+            console.error(err);
+            this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể cập nhật trạng thái' });
+          }
         });
       }
     });
+  }
+
+  getShortId(id: string | undefined | null): string {
+    if (!id) return '---';
+    return String(id).substring(0, 8).toUpperCase();
   }
 }

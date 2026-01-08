@@ -1,0 +1,130 @@
+<div class="max-w-5xl mx-auto">
+    <div class="mb-6">
+        <button pButton icon="pi pi-arrow-left" label="Quay lại danh sách" routerLink="/profile/orders"
+            class="p-button-text p-button-secondary pl-0 hover:bg-transparent hover:text-pink-600 transition-colors">
+        </button>
+    </div>
+
+    <div *ngIf="isLoading" class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex justify-between mb-8">
+            <p-skeleton width="200px" height="2rem"></p-skeleton>
+            <p-skeleton width="100px" height="2rem"></p-skeleton>
+        </div>
+        <p-skeleton height="300px"></p-skeleton>
+    </div>
+
+    <div *ngIf="!isLoading && errorMessage" class="text-center py-12 bg-red-50 rounded-xl border border-red-100">
+        <i class="pi pi-exclamation-circle text-4xl text-red-500 mb-4"></i>
+        <p class="text-red-700 font-medium">{{ errorMessage }}</p>
+    </div>
+
+    <div *ngIf="!isLoading && order" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+        <div
+            class="p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                    Đơn hàng <span class="text-pink-600">#{{ order.orderNumber || (order.id | slice:0:8) }}</span>
+                </h1>
+                <p class="text-gray-500 text-sm">
+                    Ngày đặt: {{ order.orderDate | date:'HH:mm - dd/MM/yyyy' }}
+                </p>
+            </div>
+
+            <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)" [rounded]="true"
+                styleClass="text-sm px-3 py-2 uppercase tracking-wide">
+            </p-tag>
+        </div>
+
+        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-100">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="pi pi-map-marker text-pink-500 mr-2"></i> Địa chỉ nhận hàng
+                    </h3>
+                    <div class="text-sm text-gray-700 space-y-2">
+                        <p class="font-medium text-base text-gray-900">
+                            {{ order.shippingAddress.receiverName || 'Khách hàng' }}
+                        </p>
+
+                        <p *ngIf="order.shippingAddress.phoneNumber">
+                            <span class="text-gray-500">SĐT:</span> {{ order.shippingAddress.phoneNumber }}
+                        </p>
+
+                        <p class="leading-relaxed">
+                            {{ order.shippingAddress.fullAddress }}
+                        </p>
+                    </div>
+                </div>
+
+                <div *ngIf="order.description" class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                    <h3 class="font-semibold text-blue-900 mb-2 flex items-center text-sm">
+                        <i class="pi pi-info-circle mr-2"></i> Ghi chú đơn hàng
+                    </h3>
+                    <p class="text-sm text-blue-800">{{ order.description }}</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <h3 class="font-semibold text-gray-900 mb-4">Danh sách sản phẩm</h3>
+
+                <p-table [value]="order.orderItems"
+                    styleClass="p-datatable-sm align-middle border border-gray-200 rounded-lg overflow-hidden">
+                    <ng-template pTemplate="header">
+                        <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                            <th class="py-3 pl-4">Sản phẩm</th>
+                            <th class="text-center w-24">Giá</th>
+                            <th class="text-center w-20">SL</th>
+                            <th class="text-right pr-4 w-32">Tạm tính</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-item>
+                        <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50/30">
+                            <td class="pl-4 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-16 h-16 rounded border border-gray-200 bg-gray-100 flex-shrink-0 overflow-hidden relative">
+                                        <img [src]="item.pictureUrl || 'assets/images/placeholder.png'"
+                                            [alt]="item.productName" class="w-full h-full object-cover">
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900 line-clamp-2 text-sm">{{ item.productName }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center text-gray-600">
+                                {{ item.unitPrice | currency:'VND':'symbol':'1.0-0' }}
+                            </td>
+                            <td class="text-center font-medium">x{{ item.quantity }}</td>
+                            <td class="text-right pr-4 font-medium text-gray-900">
+                                {{ (item.unitPrice * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+
+                <div class="mt-6 flex flex-col items-end gap-2 border-t border-gray-100 pt-6">
+                    <div class="flex justify-between w-full md:w-1/2 text-gray-600">
+                        <span>Tạm tính:</span>
+                        <span>{{ order.totalPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <!-- <div class="flex justify-between w-full md:w-1/2 text-gray-600">
+                        <span>Phí vận chuyển:</span>
+                        <span>30.000 ₫</span>
+                    </div> -->
+
+                    <div class="flex justify-between w-full md:w-1/2 mt-2 pt-4 border-t border-dashed border-gray-200">
+                        <span class="font-bold text-lg text-gray-900">Tổng cộng:</span>
+                        <span class="font-bold text-2xl text-pink-600">
+                            {{ order.totalPrice | currency:'VND':'symbol':'1.0-0' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

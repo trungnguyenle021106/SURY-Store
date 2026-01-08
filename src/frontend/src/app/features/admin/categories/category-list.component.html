@@ -13,12 +13,14 @@
         <i class="pi pi-search"></i>
         <input pInputText type="text" 
                [(ngModel)]="keyword" 
-               (keyup.enter)="loadCategories()" 
+               (keyup.enter)="onSearch()" 
                placeholder="Tìm kiếm..." 
                class="w-full" />
       </span>
 
-      <button pButton label="Thêm mới" icon="pi pi-plus" class="bg-pink-600 border-pink-600" (click)="openNew()"></button>
+      <button pButton label="Thêm mới" icon="pi pi-plus" 
+              class="bg-pink-600 border-pink-600 hover:bg-pink-700" 
+              (click)="openNew()"></button>
     </div>
   </div>
 
@@ -30,12 +32,14 @@
            [totalRecords]="totalRecords" 
            [loading]="isLoading"
            [rowsPerPageOptions]="[10, 20, 50]"
-           styleClass="p-datatable-sm"
+           [showCurrentPageReport]="true"
+           currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} mục"
+           styleClass="p-datatable-sm p-datatable-gridlines"
            responsiveLayout="scroll">
     
     <ng-template pTemplate="header">
-      <tr>
-        <th style="width: 100px">Mã</th>
+      <tr class="bg-gray-50">
+        <th style="width: 100px; text-align: center">Mã</th>
         <th>Tên danh mục</th>
         <th style="width: 150px; text-align: center">Thao tác</th>
       </tr>
@@ -43,22 +47,29 @@
 
     <ng-template pTemplate="body" let-category>
       <tr>
-        <td><span class="text-gray-500 text-xs">#{{ category.id | slice:0:6 }}</span></td>
+        <td class="text-center">
+            <span class="text-gray-500 text-xs bg-gray-100 px-2 py-1 rounded">
+                #{{ category.id | slice:0:6 }}
+            </span>
+        </td>
         <td class="font-medium text-gray-800 text-base">{{ category.name }}</td>
-        <td style="text-align: center">
+        <td class="text-center">
           <button pButton icon="pi pi-pencil" 
-                  class="p-button-rounded p-button-text p-button-warning mr-2" 
+                  class="p-button-rounded p-button-text p-button-warning hover:bg-orange-50" 
                   pTooltip="Sửa" 
+                  tooltipPosition="top"
                   (click)="editCategory(category)"></button>
-          
-          </td>
+        </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="3" class="text-center py-8 text-gray-500">
-          Không tìm thấy danh mục nào.
+          <div class="flex flex-col items-center">
+            <i class="pi pi-inbox text-4xl mb-2 text-gray-300"></i>
+            <p>Không tìm thấy danh mục nào.</p>
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -69,21 +80,36 @@
 <p-dialog [(visible)]="displayDialog" 
           [header]="isEditMode ? 'Cập nhật danh mục' : 'Thêm danh mục mới'" 
           [modal]="true" 
+          [draggable]="false"
+          [resizable]="false"
           [style]="{width: '450px'}" 
           styleClass="p-fluid">
   
   <form [formGroup]="categoryForm" class="mt-4">
     <div class="field">
-      <label for="name" class="font-medium text-gray-900 block mb-2">Tên danh mục <span class="text-red-500">*</span></label>
-      <input pInputText id="name" formControlName="name" placeholder="Ví dụ: Áo Sơ Mi" autofocus />
-      <small *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" class="text-red-500 block mt-1">
-        Tên danh mục không được để trống.
+      <label for="name" class="font-medium text-gray-900 block mb-2">
+          Tên danh mục <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="name" formControlName="name" 
+             placeholder="Ví dụ: Áo Sơ Mi" 
+             [ngClass]="{'ng-invalid ng-dirty': categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched}"
+             autofocus />
+             
+      <small *ngIf="categoryForm.get('name')?.invalid && (categoryForm.get('name')?.dirty || categoryForm.get('name')?.touched)" 
+             class="text-red-500 block mt-1">
+        <span *ngIf="categoryForm.get('name')?.errors?.['required']">Tên danh mục không được để trống.</span>
+        <span *ngIf="categoryForm.get('name')?.errors?.['minlength']">Tên danh mục phải có ít nhất 2 ký tự.</span>
       </small>
     </div>
   </form>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Hủy" icon="pi pi-times" (click)="displayDialog = false" class="p-button-text text-gray-500"></button>
-    <button pButton label="Lưu" icon="pi pi-check" (click)="saveCategory()" class="bg-pink-600 border-pink-600" [loading]="isSaving"></button>
+    <button pButton label="Hủy" icon="pi pi-times" 
+            (click)="displayDialog = false" 
+            class="p-button-text text-gray-500 hover:text-gray-700"></button>
+    <button pButton label="Lưu" icon="pi pi-check" 
+            (click)="saveCategory()" 
+            class="bg-pink-600 border-pink-600 hover:bg-pink-700" 
+            [loading]="isSaving"></button>
   </ng-template>
 </p-dialog>

@@ -37,6 +37,6 @@ export interface CheckoutBasketRequest {
   receiverName: string;
   phoneNumber: string;
   street: string;
-  ward: number; // ID/Key của phường (map với Common Service)
-  note?: string; // Ghi chú giao hàng (Optional)
+  ward: string; 
+  note?: string;
 }

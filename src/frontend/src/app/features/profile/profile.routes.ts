@@ -13,7 +13,11 @@ export const PROFILE_ROUTES: Routes = [
       },
       { 
         path: 'orders', 
-        loadComponent: () => import('./orders/order-history.component').then(m => m.OrderHistoryComponent) 
+        loadComponent: () => import('./orders/order-history/order-history.component').then(m => m.OrderHistoryComponent) 
+      },
+      {
+        path: 'orders/:id',
+        loadComponent: () => import('./orders/order-detail/order-detail.component').then(m => m.OrderDetailComponent)
       },
       { 
         path: 'addresses', 

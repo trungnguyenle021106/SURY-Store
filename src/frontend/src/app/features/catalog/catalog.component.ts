@@ -12,11 +12,10 @@ import { SidebarModule } from 'primeng/sidebar';
 import { TagModule } from 'primeng/tag';
 import { PaginatorModule } from 'primeng/paginator';
 import { TooltipModule } from 'primeng/tooltip';
-import { SkeletonModule } from 'primeng/skeleton'; // Import Skeleton
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Data & Models
 import { Category, Product } from '../../core/models/catalog.models';
-import { MOCK_PRODUCTS } from '../../shared/utils/mock-data';
 import { ProductService } from '../../core/services/product.service';
 import { CategoryService } from '../../core/services/category.service';
 import { finalize } from 'rxjs/internal/operators/finalize';
@@ -41,12 +40,14 @@ export class CatalogComponent implements OnInit {
 
   // Data
   products: Product[] = [];        
-  featuredProducts: Product[] = []; // Dữ liệu gốc để lọc
+  featuredProducts: Product[] = []; 
   categories: Category[] = [];
 
   // Filter States
   selectedCategories: string[] = [];
   priceRange: number[] = [0, 1000000];
+  keyword: string = ''; // Thêm biến keyword
+
   sortOptions = [
     { label: 'Mới nhất', value: 'newest' },
     { label: 'Giá: Thấp đến Cao', value: 'price_asc' },
@@ -54,7 +55,7 @@ export class CatalogComponent implements OnInit {
   ];
   selectedSort: string = 'newest';
 
-  // UI States (Tách biệt 2 biến loading)
+  // UI States
   isLoadingProducts = true; 
   isLoadingCategories = true;
   
@@ -65,35 +66,49 @@ export class CatalogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
-    this.loadFeaturedProducts();
     
+    // Lắng nghe URL thay đổi để load lại dữ liệu
     this.route.queryParams.subscribe(params => {
+      this.keyword = params['keyword'] || ''; // Lấy keyword từ URL
+      
       if (params['categoryId']) {
         this.selectedCategories = [params['categoryId']];
+      } else {
+        // Nếu không có categoryId trên URL thì reset (trừ khi bạn muốn giữ state)
+        // this.selectedCategories = []; 
       }
-      // Gọi filter ngay khi có params
-      this.filterProducts();
+      
+      // Load sản phẩm dựa trên keyword (nếu có)
+      this.loadFeaturedProducts(this.keyword);
     });
   }
 
-  loadFeaturedProducts() {
+  // Cập nhật hàm này để nhận keyword
+  loadFeaturedProducts(searchKeyword: string = '') {
     this.isLoadingProducts = true;
-    this.productService.getProducts(1, 100) // Lấy nhiều hơn để test lọc client-side
+    
+    // Gọi API với keyword. Giả sử getProducts hỗ trợ tham số thứ 3 là keyword
+    // Nếu API bạn là getProducts(page, size, keyword)
+    this.productService.getProducts(1, 100, searchKeyword) 
       .pipe(finalize(() => {
-         // Không set false ở đây ngay, để filterProducts xử lý
+         // Loading sẽ được tắt trong filterProducts
       }))
       .subscribe({
         next: (response: any) => {
           if (response.products && Array.isArray(response.products.data)) {
             this.featuredProducts = response.products.data;
+          } else if (response.data && Array.isArray(response.data)) {
+             // Fallback nếu response trả về trực tiếp data (tùy cấu trúc API)
+             this.featuredProducts = response.data;
           } else {
             this.featuredProducts = [];
           }
-          // Sau khi có dữ liệu gốc, chạy filter lần đầu
+          // Chạy filter client-side trên tập dữ liệu vừa lấy về
           this.filterProducts();
         },
         error: (err) => {
             console.error('Lỗi tải sản phẩm:', err);
+            this.featuredProducts = [];
             this.isLoadingProducts = false;
         }
       });
@@ -101,12 +116,14 @@ export class CatalogComponent implements OnInit {
 
   loadCategories() {
     this.isLoadingCategories = true;
-    this.categoryService.getCategories(1, 4)
+    this.categoryService.getCategories(1, 100) // Lấy nhiều hơn để hiện đủ filter
       .pipe(finalize(() => this.isLoadingCategories = false))
       .subscribe({
         next: (response: any) => {
           if (response.categories && Array.isArray(response.categories.data)) {
             this.categories = response.categories.data;
+          } else if (response.data) {
+             this.categories = response.data;
           } else {
             this.categories = [];
           }
@@ -116,9 +133,9 @@ export class CatalogComponent implements OnInit {
   }
 
   filterProducts() {
-    this.isLoadingProducts = true; // Bật loading của riêng Product
+    this.isLoadingProducts = true; 
 
-    // Simulate API delay
+    // Simulate delay for client-side filtering effect
     setTimeout(() => {
       let result = [...this.featuredProducts];
 
@@ -144,8 +161,8 @@ export class CatalogComponent implements OnInit {
       const end = this.first + this.rows;
       this.products = result.slice(start, end);
 
-      this.isLoadingProducts = false; // Tắt loading Product
-    }, 500);
+      this.isLoadingProducts = false; 
+    }, 300);
   }
 
   onPageChange(event: any) {
@@ -158,6 +175,10 @@ export class CatalogComponent implements OnInit {
   clearFilters() {
     this.selectedCategories = [];
     this.priceRange = [0, 1000000];
+    // Không clear keyword ở đây nếu bạn muốn giữ kết quả tìm kiếm nhưng bỏ bộ lọc giá/danh mục
+    // Nếu muốn clear cả tìm kiếm:
+    // this.keyword = ''; 
+    // this.router.navigate([], { queryParams: {} }); 
     this.filterProducts();
   }
 

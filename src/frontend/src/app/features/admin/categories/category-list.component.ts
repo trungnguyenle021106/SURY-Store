@@ -18,6 +18,7 @@ import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-category-list',
+  standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     TableModule, ButtonModule, InputTextModule, DialogModule, ToastModule, TooltipModule
@@ -26,9 +27,9 @@ import { Observable } from 'rxjs';
   templateUrl: './category-list.component.html'
 })
 export class CategoryListComponent implements OnInit {
-  categoryService = inject(CategoryService);
-  messageService = inject(MessageService);
-  fb = inject(FormBuilder);
+  private categoryService = inject(CategoryService);
+  private messageService = inject(MessageService);
+  private fb = inject(FormBuilder);
 
   // Data
   categories: Category[] = [];
@@ -51,19 +52,18 @@ export class CategoryListComponent implements OnInit {
 
   constructor() {
     this.categoryForm = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', [Validators.required, Validators.minLength(2)]] // Validate tên ít nhất 2 ký tự
     });
   }
 
   ngOnInit(): void {
-    this.loadCategories();
+    // Để Table tự gọi loadCategories thông qua event (onLazyLoad)
   }
 
-  // 1. Load danh sách (Gọi khi init hoặc chuyển trang)
+  // 1. Load danh sách
   loadCategories(event?: any) {
     this.isLoading = true;
-    
-    // Nếu gọi từ Table (khi bấm chuyển trang)
+
     if (event) {
       this.currentPage = (event.first / event.rows) + 1;
       this.pageSize = event.rows;
@@ -71,16 +71,31 @@ export class CategoryListComponent implements OnInit {
 
     this.categoryService.getCategories(this.currentPage, this.pageSize, this.keyword)
       .subscribe({
-        next: (res) => {
-          this.categories = res.data;
-          this.totalRecords = res.count;
+        next: (res: any) => { // Dùng any để chấp nhận cấu trúc res.categories
+          // GIỮ NGUYÊN THEO Ý BẠN:
+          if (res.categories) {
+            this.categories = res.categories.data;
+            this.totalRecords = res.categories.count;
+          } else {
+             // Fallback nếu API thay đổi sau này
+             this.categories = [];
+             this.totalRecords = 0;
+          }
           this.isLoading = false;
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
+          console.error(err);
           this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được dữ liệu' });
         }
       });
+  }
+  
+  // Helper search
+  onSearch() {
+    this.currentPage = 1;
+    // Gọi loadCategories với giả lập event để reset về trang 1
+    this.loadCategories({ first: 0, rows: this.pageSize });
   }
 
   // 2. Mở dialog Thêm mới
@@ -99,7 +114,7 @@ export class CategoryListComponent implements OnInit {
     this.displayDialog = true;
   }
 
-  // 4. Lưu (Tạo hoặc Update)
+  // 4. Lưu
   saveCategory() {
     if (this.categoryForm.invalid) {
       this.categoryForm.markAllAsTouched();
@@ -109,20 +124,19 @@ export class CategoryListComponent implements OnInit {
     this.isSaving = true;
     const payload = { name: this.categoryForm.value.name };
 
-    // Chọn API dựa vào chế độ Edit hay New
     const request$ = this.isEditMode && this.currentId
       ? this.categoryService.updateCategory(this.currentId, payload)
       : this.categoryService.createCategory(payload) as Observable<any>;
 
     request$.subscribe({
-      next: (res) => {
+      next: () => {
         this.isSaving = false;
-        this.displayDialog = false; // Đóng modal
-        
-        // Thông báo & Reload
+        this.displayDialog = false;
         const msg = this.isEditMode ? 'Cập nhật thành công' : 'Tạo mới thành công';
         this.messageService.add({ severity: 'success', summary: 'Thành công', detail: msg });
-        this.loadCategories(); // Tải lại bảng
+        
+        // Reload giữ nguyên trang hiện tại
+        this.loadCategories({ first: (this.currentPage - 1) * this.pageSize, rows: this.pageSize });
       },
       error: () => {
         this.isSaving = false;

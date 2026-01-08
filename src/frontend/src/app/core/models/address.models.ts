@@ -2,7 +2,7 @@ export interface CreateAddressRequest {
   receiverName: string;
   phoneNumber: string;
   street: string;
-  ward: number; // Lưu ý: Request gửi lên là số (Key/Enum)
+  ward: string; 
   isDefault: boolean;
 }
 

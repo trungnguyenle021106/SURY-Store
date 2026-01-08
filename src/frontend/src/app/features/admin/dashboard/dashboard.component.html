@@ -1,54 +1,47 @@
 <div class="flex flex-col gap-6">
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
-            <i class="pi pi-dollar text-xl font-bold"></i>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 font-medium">Doanh thu tháng</p>
-            <h3 class="text-2xl font-bold text-gray-900">185.2M</h3>
-            <span class="text-green-500 text-xs font-bold"><i class="pi pi-arrow-up"></i> +12% so với tháng trước</span>
-          </div>
-        </div>
-  
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-            <i class="pi pi-shopping-bag text-xl font-bold"></i>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 font-medium">Đơn hàng mới</p>
-            <h3 class="text-2xl font-bold text-gray-900">128</h3>
-            <span class="text-xs text-gray-400">Chờ xử lý: 15</span>
-          </div>
-        </div>
-  
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-            <i class="pi pi-users text-xl font-bold"></i>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 font-medium">Khách hàng mới</p>
-            <h3 class="text-2xl font-bold text-gray-900">45</h3>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-              <i class="pi pi-chart-line text-xl font-bold"></i>
+            <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
+                <i class="pi pi-dollar text-xl font-bold"></i>
             </div>
             <div>
-              <p class="text-sm text-gray-500 font-medium">Tỉ lệ chốt đơn</p>
-              <h3 class="text-2xl font-bold text-gray-900">3.2%</h3>
+                <p class="text-sm text-gray-500 font-medium">Doanh thu (thực tế)</p>
+                <h3 class="text-2xl font-bold text-gray-900">{{ totalRevenue | currency:'VND':'symbol':'1.0-0' }}</h3>
+                <span class="text-green-500 text-xs font-bold">
+                    <i class="pi pi-chart-line"></i> Dữ liệu realtime
+                </span>
+            </div>
+        </div>
+  
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <i class="pi pi-shopping-bag text-xl font-bold"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Đơn hàng mới</p>
+                <h3 class="text-2xl font-bold text-gray-900">{{ pendingOrdersCount }}</h3>
+                <span class="text-xs text-gray-400">Tổng đơn: {{ totalOrders }}</span>
+            </div>
+        </div>
+  
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                <i class="pi pi-check-circle text-xl font-bold"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Tỉ lệ hoàn thành</p>
+                <h3 class="text-2xl font-bold text-gray-900">{{ conversionRate | number:'1.1-2' }}%</h3>
+                <span class="text-xs text-gray-400">Đã giao thành công: {{ completedOrdersCount }}</span>
             </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Biểu đồ doanh thu</h3>
-            <div class="h-[350px]"> <p-chart type="line" [data]="revenueData" [options]="revenueOptions" height="100%"></p-chart>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Biểu đồ doanh thu năm nay</h3>
+            <div class="h-[350px]"> 
+                <p-chart type="line" [data]="revenueData" [options]="revenueOptions" height="100%"></p-chart>
             </div>
         </div>
 
@@ -58,37 +51,49 @@
                 <p-chart type="doughnut" [data]="orderStatusData" [options]="orderStatusOptions" height="280px"></p-chart>
             </div>
             <div class="mt-4 text-center text-sm text-gray-500">
-                Tổng số đơn: <span class="font-bold text-gray-900">470</span>
+                Tổng số đơn xử lý: <span class="font-bold text-gray-900">{{ totalOrders }}</span>
             </div>
         </div>
     </div>
 
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Sản phẩm bán chạy tháng này</h3>
-        <p-table [value]="topProducts" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-sm">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Sản phẩm mới nhập kho</h3>
+        <p-table [value]="recentProducts" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
                 <tr>
                     <th>Sản phẩm</th>
-                    <th class="text-center">Đã bán</th>
-                    <th class="text-right">Doanh thu</th>
-                    <th class="text-center">Xu hướng</th>
+                    <th class="text-center">Tồn kho</th>
+                    <th class="text-right">Giá bán</th>
+                    <th class="text-center">Trạng thái</th>
                 </tr>
             </ng-template>
             <ng-template pTemplate="body" let-product>
                 <tr>
                     <td>
                         <div class="flex items-center gap-3">
-                            <img [src]="product.image" class="w-10 h-10 rounded bg-gray-100 object-cover">
+                            <img [src]="product.imageUrl || 'https://placehold.co/50'" 
+                                 class="w-10 h-10 rounded bg-gray-100 object-cover"
+                                 onerror="this.src='https://placehold.co/50'">
                             <span class="font-medium text-gray-700">{{ product.name }}</span>
                         </div>
                     </td>
-                    <td class="text-center font-bold">{{ product.sold }}</td>
-                    <td class="text-right text-gray-900">{{ product.revenue | currency:'VND':'symbol':'1.0-0' }}</td>
+                    <td class="text-center font-bold">
+                        <span [class.text-red-500]="product.quantity < 10">{{ product.quantity }}</span>
+                    </td>
+                    <td class="text-right text-gray-900">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</td>
                     <td class="text-center">
-                        <span class="text-green-500 bg-green-50 px-2 py-1 rounded text-xs font-bold">
-                            <i class="pi pi-arrow-up"></i> High
+                        <span *ngIf="product.quantity > 0" class="text-green-500 bg-green-50 px-2 py-1 rounded text-xs font-bold">
+                            Sẵn hàng
+                        </span>
+                        <span *ngIf="product.quantity === 0" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold">
+                            Hết hàng
                         </span>
                     </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="4" class="text-center py-4">Không có dữ liệu sản phẩm.</td>
                 </tr>
             </ng-template>
         </p-table>

@@ -43,25 +43,31 @@ export class ChangePasswordComponent {
 
   onSubmit() {
     if (this.passwordForm.invalid) {
-        this.passwordForm.markAllAsTouched();
-        return;
+      this.passwordForm.markAllAsTouched();
+      return;
     }
 
     this.isLoading = true;
     const { currentPassword, newPassword } = this.passwordForm.value;
 
     this.userService.changePassword({ currentPassword, newPassword }).subscribe({
-        next: (res) => {
-            this.isLoading = false;
-            if (res.isSuccess) {
-                this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đổi mật khẩu thành công.' });
-                this.passwordForm.reset();
-            }
-        },
-        error: (err) => {
-            this.isLoading = false;
-            this.messageService.add({ severity: 'error', summary: 'Thất bại', detail: 'Mật khẩu cũ không đúng hoặc lỗi hệ thống.' });
+      next: (res) => {
+        this.isLoading = false;
+        if (res.isSuccess) {
+          this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đổi mật khẩu thành công.' });
+          this.passwordForm.reset();
         }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        const errorMessage = err.error?.detail || 'Mật khẩu cũ không đúng hoặc lỗi hệ thống.';
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Thất bại',
+          detail: errorMessage // <--- Truyền biến vào đây
+        });
+      }
     });
   }
 }

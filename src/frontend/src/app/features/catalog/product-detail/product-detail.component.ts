@@ -33,7 +33,7 @@ export class ProductDetailComponent implements OnInit {
   private basketService = inject(BasketService);
 
   product: Product | null = null;
-  relatedProducts: Product[] = []; // Vẫn giữ gợi ý SP khác để khách không bị "cụt đường"
+  relatedProducts: Product[] = [];
   quantity: number = 1;
 
   ngOnInit(): void {
@@ -43,33 +43,13 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  loadMockProduct(id: string | null) {
-    if (!id) return;
-
-    const found = MOCK_PRODUCTS.find(p => p.id === id);
-    if (found) {
-      this.product = found;
-      this.quantity = 1;
-
-      // Lấy 4 sản phẩm gợi ý (trừ sản phẩm đang xem)
-      this.relatedProducts = MOCK_PRODUCTS.filter(p => p.id !== id).slice(0, 4);
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
   loadProduct(id: string | null) {
     if (!id) return;
 
-    // 1. Lấy thông tin sản phẩm chính
     this.productService.getProductById(id).subscribe({
       next: (product: any) => {
         this.product = product;
-
-        // 2. Gọi API lấy sản phẩm tương tự
-        // Logic: Lấy trang 1, 4 phần tử, không keyword, cùng categoryId, trừ id hiện tại
         this.loadRelatedProducts(product.categoryId, product.id);
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
@@ -79,7 +59,6 @@ export class ProductDetailComponent implements OnInit {
     this.productService.getProducts(1, 4, undefined, categoryId, currentProductId)
       .subscribe({
         next: (response: any) => {
-          // API trả về response bọc trong PaginatedResult, nên lấy .data hoặc .items tùy model
           if (response.products && Array.isArray(response.products.data)) {
             this.relatedProducts = response.products.data;
           } else {
@@ -89,49 +68,14 @@ export class ProductDetailComponent implements OnInit {
       });
   }
 
-addToCart() {
+  // --- HÀM NÀY ĐÃ ĐƯỢC SỬA ---
+  addToCart() {
     if (!this.product) return;
 
-    // --- BƯỚC 1: KIỂM TRA TỒN KHO THỰC TẾ (Kết hợp với giỏ hàng) ---
-    
-    // Lấy thông tin giỏ hàng hiện tại (Signal)
-    const currentCart = this.basketService.cart();
-    
-    // Tìm xem sản phẩm này đã có trong giỏ chưa
-    const existingItem = currentCart?.items.find(i => i.productId === this.product!.id);
-    const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+    // ĐÃ XÓA: Đoạn code kiểm tra tồn kho (currentCart, totalRequested...)
+    // Bây giờ cho phép mua tẹt ga, bất kể kho còn bao nhiêu.
 
-    // Tổng số lượng khách muốn mua (Đã có trong giỏ + Đang muốn thêm)
-    const totalRequested = currentQtyInCart + this.quantity;
-
-    // Nếu tổng vượt quá số lượng tồn kho của sản phẩm
-    if (totalRequested > this.product.quantity) {
-      // Tính số lượng còn có thể thêm được
-      const availableToAdd = Math.max(0, this.product.quantity - currentQtyInCart);
-
-      if (availableToAdd === 0) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Đạt giới hạn số lượng',
-          detail: `Bạn đã thêm toàn bộ số lượng có sẵn (${this.product.quantity}) vào giỏ hàng rồi.`
-        });
-      } else {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Vượt quá tồn kho',
-          detail: `Bạn đã có ${currentQtyInCart} cái trong giỏ. Chỉ có thể thêm tối đa ${availableToAdd} cái nữa.`
-        });
-        
-        // (Optional) Tự động sửa lại số lượng input về số tối đa có thể mua giúp khách
-        this.quantity = availableToAdd; 
-      }
-      
-      return; // DỪNG LẠI NGAY, KHÔNG GỌI SERVICE
-    }
-
-    // --- BƯỚC 2: LOGIC CŨ (NẾU HỢP LỆ) ---
-
-    // Hiện thông báo thành công (Optimistic UI)
+    // Hiện thông báo thành công
     this.messageService.add({
       severity: 'success',
       summary: 'Thành công',
@@ -156,7 +100,6 @@ addToCart() {
     });
   }
 
-  // Helper hiển thị trạng thái text
   get inventoryStatus() {
     if (!this.product) return { label: '', severity: 'secondary' as const };
     if (this.product.quantity === 0) return { label: 'Hết hàng', severity: 'danger' as const };

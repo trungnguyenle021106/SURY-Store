@@ -6,8 +6,7 @@
         <p-button icon="pi pi-bars" [text]="true" severity="secondary" (onClick)="sidebarVisible = true"></p-button>
       </div>
 
-      <div
-        class="flex-shrink-0 flex items-center justify-center lg:justify-start w-full lg:w-auto absolute lg:static left-0 pointer-events-none lg:pointer-events-auto">
+      <div class="flex-shrink-0 flex items-center justify-center lg:justify-start w-full lg:w-auto absolute lg:static left-0 pointer-events-none lg:pointer-events-auto">
         <a routerLink="/" class="text-2xl font-bold tracking-tighter text-gray-900 pointer-events-auto">
           TINI<span class="text-primary-500">.</span>
         </a>
@@ -21,26 +20,30 @@
       </nav>
 
       <div class="flex items-center space-x-2">
+        
         <div class="hidden sm:block relative">
           <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-          <input type="text" placeholder="Tìm kiếm..."
+          <input type="text" placeholder="Tìm kiếm..." [(ngModel)]="keyword" (keyup.enter)="onSearch()"
             class="pl-10 pr-4 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 rounded-full text-sm w-48 transition-all outline-none" />
         </div>
 
         <p-button [text]="true" severity="secondary" routerLink="/basket">
           <div class="relative inline-flex items-center">
             <i class="pi pi-shopping-bag text-xl"></i>
-
             <p-badge *ngIf="basketService.cartCount() > 0" [value]="basketService.cartCount().toString()"
               severity="danger"
               styleClass="absolute -top-2 -right-2 min-w-[1.1rem] h-[1.1rem] leading-[1.1rem] text-[9px] px-0 flex items-center justify-center">
             </p-badge>
-
           </div>
         </p-button>
 
-        <p-button icon="pi pi-user" [text]="true" rounded="true" severity="secondary"
-          routerLink="/auth/login"></p-button>
+        <p-button icon="pi pi-user" [text]="true" rounded="true"
+            [severity]="authService.currentUser() ? 'primary' : 'secondary'"
+            [routerLink]="authService.currentUser() ? '/profile' : '/auth/login'"
+            [pTooltip]="authService.currentUser()?.fullName || 'Tài khoản'" 
+            tooltipPosition="bottom">
+        </p-button>
+
       </div>
     </div>
   </div>
@@ -49,6 +52,15 @@
 <p-sidebar [(visible)]="sidebarVisible">
   <div class="flex flex-col space-y-4 mt-4">
     <span class="text-xl font-bold mb-4">Menu</span>
+
+    <div class="relative sm:hidden mb-4">
+      <input type="text" [(ngModel)]="keyword" (keyup.enter)="onSearch()" placeholder="Tìm kiếm sản phẩm..."
+        class="w-full pl-4 pr-10 py-2 bg-gray-100 rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary-500">
+      <button (click)="onSearch()" class="absolute right-2 top-1/2 -translate-y-1/2 text-primary-600">
+        <i class="pi pi-search"></i>
+      </button>
+    </div>
+
     <a *ngFor="let item of navItems" [routerLink]="item.path" (click)="sidebarVisible = false"
       class="text-lg font-medium text-gray-800 py-2 border-b border-gray-100">
       {{ item.label }}

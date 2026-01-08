@@ -16,20 +16,23 @@ import { ImageModule } from 'primeng/image';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 // Services & Models
 import { ProductService } from '../../../core/services/product.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Product, Category, ProductStatus } from '../../../core/models/catalog.models';
 import { ProductStatusLabel, ProductStatusSeverity } from '../../../shared/utils/product-status.util';
-import { Observable } from 'rxjs/internal/Observable';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-product-list',
+  standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
-    TableModule, ButtonModule, InputTextModule, InputTextarea, InputNumberModule, FormsModule,
-    DropdownModule, DialogModule, ToastModule, TagModule, ImageModule, ConfirmDialogModule, TooltipModule
+    CommonModule, ReactiveFormsModule, FormsModule,
+    TableModule, ButtonModule, InputTextModule, InputTextarea, InputNumberModule,
+    DropdownModule, DialogModule, ToastModule, TagModule, ImageModule, ConfirmDialogModule, 
+    TooltipModule, RadioButtonModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -42,52 +45,67 @@ export class ProductListComponent implements OnInit {
   confirmationService = inject(ConfirmationService);
   fb = inject(FormBuilder);
 
-  // Data
+  // --- DATA ---
   products: Product[] = [];
-  categories: Category[] = []; // Để đổ vào Dropdown
+  categories: Category[] = []; 
   totalRecords = 0;
   isLoading = false;
 
-  // Pagination Params
+  // --- FILTERS & PAGINATION ---
   currentPage = 1;
   pageSize = 10;
   keyword = '';
+  selectedCategoryId: string | null = null; // Thêm biến để lọc category
 
-  // Utils (Dùng trong HTML)
+  // --- UTILS ---
   ProductStatus = ProductStatus;
   getStatusLabel = (s: number) => ProductStatusLabel[s];
   getStatusSeverity = (s: number) => ProductStatusSeverity[s];
 
-  // Dialog State
+  // --- PRODUCT DIALOG (Create/Edit) ---
   displayDialog = false;
   isEditMode = false;
   currentId: string | null = null;
   isSaving = false;
-
-  // Form
   productForm: FormGroup;
 
+  // --- STOCK DIALOG (Manage Quantity) ---
+  displayStockDialog = false;
+  stockProduct: Product | null = null;
+  stockForm: FormGroup;
+
   constructor() {
+    // Form chính sản phẩm
     this.productForm = this.fb.group({
       name: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       description: [''],
       imageUrl: [''],
       categoryId: [null, Validators.required],
-      // Vẫn giữ field này để hiển thị khi Sửa (Edit), nhưng không bắt buộc nhập
-      quantity: [{ value: 0, disabled: true }]
+      quantity: [{ value: 0, disabled: true }] // Chỉ hiển thị, không sửa ở đây
+    });
+
+    // Form quản lý kho
+    this.stockForm = this.fb.group({
+      action: ['add', Validators.required], // 'add' hoặc 'remove'
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      note: [''] // Ghi chú nhập/xuất (nếu cần mở rộng sau này)
     });
   }
 
   ngOnInit(): void {
-    this.loadProducts();
-    this.loadCategoriesForDropdown();
+    // Load categories trước để map tên, sau đó mới load products
+    this.loadCategoriesForDropdown(); 
   }
 
-  // 1. Load Categories (Lấy hết hoặc trang lớn để fill dropdown)
+  // 1. Load Categories
   loadCategoriesForDropdown() {
-    this.categoryService.getCategories(1, 100).subscribe(res => {
-      this.categories = res.data;
+    this.categoryService.getCategories(1, 100).subscribe((res: any) => {
+      // Handle cấu trúc response tùy biến của bạn
+      this.categories = res.categories ? res.categories.data : [];
+      
+      // Sau khi có categories thì mới load products để map tên
+      this.loadProducts();
     });
   }
 
@@ -99,30 +117,36 @@ export class ProductListComponent implements OnInit {
       this.pageSize = event.rows;
     }
 
-    this.productService.getProducts(this.currentPage, this.pageSize, this.keyword)
+    // Truyền thêm param categoryId nếu có chọn lọc
+    this.productService.getProducts(this.currentPage, this.pageSize, this.keyword, this.selectedCategoryId || undefined, undefined, true)
       .subscribe({
-        next: (res) => {
-          this.products = res.data;
-          this.totalRecords = res.count;
+        next: (res: any) => {
+          this.products = res.products.data;
+          this.totalRecords = res.products.count;
           this.isLoading = false;
         },
         error: () => {
           this.isLoading = false;
-          // Mock data test UI if fail
           this.products = [];
         }
       });
   }
 
-  // 3. Open Create Dialog
+  // Helper: Lấy tên danh mục từ ID
+  getCategoryName(id: string): string {
+    const cat = this.categories.find(c => c.id === id);
+    return cat ? cat.name : '---';
+  }
+
+  // --- CRUD PRODUCT ---
+
   openNew() {
     this.isEditMode = false;
     this.currentId = null;
-    this.productForm.reset({ price: 0 });
+    this.productForm.reset({ price: 0, quantity: 0 });
     this.displayDialog = true;
   }
 
-  // 4. Open Edit Dialog
   editProduct(product: Product) {
     this.isEditMode = true;
     this.currentId = product.id;
@@ -132,13 +156,12 @@ export class ProductListComponent implements OnInit {
       description: product.description,
       imageUrl: product.imageUrl,
       categoryId: product.categoryId,
-      quantity: product.quantity // Thường edit không cho sửa số lượng trực tiếp ở đây, nhưng tạm để
+      quantity: product.quantity 
     });
     this.displayDialog = true;
   }
 
-  // 5. Save (Create / Update)
- saveProduct() {
+  saveProduct() {
     if (this.productForm.invalid) {
       this.productForm.markAllAsTouched();
       return;
@@ -146,8 +169,7 @@ export class ProductListComponent implements OnInit {
 
     this.isSaving = true;
     const formVal = this.productForm.value;
-    
-    // Payload chuẩn (Không có quantity)
+
     const payload = {
       name: formVal.name,
       price: formVal.price,
@@ -156,20 +178,19 @@ export class ProductListComponent implements OnInit {
       categoryId: formVal.categoryId
     };
 
-    let request$ : Observable<any>;
+    let request$: Observable<any>;
     if (this.isEditMode && this.currentId) {
       request$ = this.productService.updateProduct(this.currentId, payload);
     } else {
-      // Create: Backend tự set quantity default
-      request$ = this.productService.createProduct(payload); 
+      request$ = this.productService.createProduct(payload);
     }
 
     request$.subscribe({
-      next: (res) => {
+      next: () => {
         this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu sản phẩm' });
         this.displayDialog = false;
         this.isSaving = false;
-        this.loadProducts();
+        this.loadProducts(); // Reload table
       },
       error: () => {
         this.isSaving = false;
@@ -178,13 +199,58 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // 6. Đổi trạng thái (Active / Discontinue)
+  // --- STOCK MANAGEMENT (NEW FEATURE) ---
+
+  openStockDialog(product: Product) {
+    this.stockProduct = product;
+    this.stockForm.reset({ action: 'add', quantity: 10 }); // Default nhập 10 cái
+    this.displayStockDialog = true;
+  }
+
+  saveStock() {
+    if (this.stockForm.invalid || !this.stockProduct) return;
+
+    this.isSaving = true;
+    const { action, quantity } = this.stockForm.value;
+    const productId = this.stockProduct.id;
+    const payload = { quantity: quantity };
+
+    // Chọn API dựa trên Action
+    const request$ = action === 'add' 
+      ? this.productService.addStock(productId, payload)
+      : this.productService.removeStock(productId, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Thành công', 
+            detail: action === 'add' ? `Đã nhập thêm ${quantity} sản phẩm` : `Đã giảm ${quantity} sản phẩm`
+        });
+        this.displayStockDialog = false;
+        this.isSaving = false;
+        this.loadProducts(); // Reload để cập nhật số lượng và trạng thái (OutOfStock -> Active)
+      },
+      error: (err) => {
+        this.isSaving = false;
+        console.error(err);
+        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể cập nhật kho' });
+      }
+    });
+  }
+
+  // --- CHANGE STATUS ---
+
   toggleStatus(product: Product) {
     const isCurrentlyActive = product.status === ProductStatus.Active;
-    const action = isCurrentlyActive ? 'ngừng kinh doanh' : 'mở bán lại';
+    // Nếu đang là OutOfStock, cũng coi như cần active lại (nhưng thực tế nên nhập kho)
+    // Logic ở đây: Nếu Active -> Discontinue. Nếu Anything else -> Active.
+    
+    const actionLabel = isCurrentlyActive ? 'Ngừng kinh doanh' : 'Mở bán lại';
+    const actionVerb = isCurrentlyActive ? 'ngừng kinh doanh' : 'mở bán lại';
 
     this.confirmationService.confirm({
-      message: `Bạn có chắc muốn ${action} sản phẩm "${product.name}"?`,
+      message: `Bạn có chắc muốn ${actionVerb} sản phẩm "${product.name}"?`,
       header: 'Xác nhận trạng thái',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Đồng ý',

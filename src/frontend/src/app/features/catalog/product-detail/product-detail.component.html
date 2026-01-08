@@ -48,7 +48,6 @@
                     spinnerMode="horizontal" 
                     [step]="1" 
                     [min]="1" 
-                    [max]="product.quantity"
                     inputStyleClass="w-16 text-center font-bold border-gray-300 text-gray-900"
                     incrementButtonIcon="pi pi-plus" 
                     decrementButtonIcon="pi pi-minus">
@@ -75,7 +74,7 @@
     </div>
 
     <div class="mt-16 border-t border-gray-100 pt-10">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Sản phẩm khác</h2>
+        <h2 class="text-xl font-bold text-gray-900">Sản phẩm khác</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div *ngFor="let item of relatedProducts" 
                  class="group cursor-pointer" [routerLink]="['/catalog', item.id]">

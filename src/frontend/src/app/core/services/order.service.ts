@@ -1,8 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AdminOrderListResponse, OrderDetail, OrderStatus, UserOrdersResponse } from '../models/ordering.models';
-import { SuccessResponse } from '../models/core.models';
+import { 
+  AdminOrderListResponse, 
+  OrderDetail, 
+  OrderStatus, 
+  UserOrdersResponse,
+  OrderSummary 
+} from '../models/ordering.models';
+import { PaginatedResult, SuccessResponse } from '../models/core.models'; // Đảm bảo import PaginatedResult
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -10,7 +16,7 @@ import { environment } from '../../environments/environment';
 })
 export class OrderService {
   private http = inject(HttpClient);
-  // Base URL chung (Lưu ý: Admin API có thể nằm ở path khác, tôi sẽ xử lý bên dưới)
+  // Base URL: .../api/orders
   private baseUrl = `${environment.apiUrl}/orders`;
   private adminUrl = `${environment.apiUrl}/admin/orders`;
 
@@ -18,9 +24,36 @@ export class OrderService {
   // 1. CHO KHÁCH HÀNG (CUSTOMER)
   // ==========================================
 
-  // GET /orders/user/{userId}
-  getMyOrders(userId: string): Observable<UserOrdersResponse> {
+  // [CŨ] GET /orders/user/{userId} - Lấy tất cả (không phân trang)
+  getOrderByUserId(userId: string): Observable<UserOrdersResponse> {
     return this.http.get<UserOrdersResponse>(`${this.baseUrl}/user/${userId}`);
+  }
+
+  /**
+   * [MỚI] GET /orders/me
+   * Lấy danh sách đơn hàng của người dùng đang đăng nhập (Dựa trên Token)
+   * Hỗ trợ: Phân trang, Lọc trạng thái, Tìm kiếm
+   */
+  getOrdersByCurrentUser(
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    status?: OrderStatus,
+    searchTerm?: string
+  ): Observable<PaginatedResult<OrderSummary>> {
+    let params = new HttpParams()
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+
+    if (status !== undefined && status !== null) {
+      params = params.set('status', status.toString());
+    }
+
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+
+    // Backend trả về kết quả phân trang (PaginatedResult)
+    return this.http.get<PaginatedResult<OrderSummary>>(`${this.baseUrl}/me`, { params });
   }
 
   // GET /orders/{id}
@@ -55,10 +88,8 @@ export class OrderService {
   }
 
   // --- QUẢN LÝ TRẠNG THÁI (State Transitions) ---
-  // Giả định route là: PATCH /admin/orders/{id}/ship ... (hoặc /orders/{id}/ship)
-  // Dựa vào context, thường các lệnh này nằm ở controller xử lý đơn hàng.
   
-  // PATCH /orders/{id}/start-processing (hoặc tương tự)
+  // PATCH /orders/{id}/start-processing
   startProcessing(id: string): Observable<SuccessResponse> {
     return this.http.patch<SuccessResponse>(`${this.baseUrl}/${id}/start-processing`, {});
   }

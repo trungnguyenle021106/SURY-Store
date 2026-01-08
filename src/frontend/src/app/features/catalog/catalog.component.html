@@ -1,10 +1,18 @@
 <div class="bg-gray-50 min-h-screen pb-12">
   <div class="bg-white shadow-sm border-b border-gray-100 mb-6">
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold text-gray-900">Tất cả sản phẩm</h1>
+      
+      <ng-container *ngIf="keyword; else defaultTitle">
+        <h1 class="text-3xl font-bold text-gray-900">Kết quả tìm kiếm: "{{ keyword }}"</h1>
+      </ng-container>
+      <ng-template #defaultTitle>
+        <h1 class="text-3xl font-bold text-gray-900">Tất cả sản phẩm</h1>
+      </ng-template>
+
       <p class="text-gray-500 mt-2 text-sm" *ngIf="!isLoadingProducts">
         Tìm thấy <span class="font-medium text-pink-600">{{totalRecords}}</span> sản phẩm phù hợp.
       </p>
+      
       <p-skeleton width="200px" height="1rem" styleClass="mt-2" *ngIf="isLoadingProducts"></p-skeleton>
     </div>
   </div>
@@ -65,13 +73,18 @@
 
         <div *ngIf="isLoadingProducts" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
            <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
-              <div class="aspect-[3/4] bg-gray-50 relative p-1">
-                 <p-skeleton width="100%" height="100%"></p-skeleton>
-              </div>
-              <div class="p-4 flex flex-col gap-2 flex-grow">
-                 <p-skeleton width="30%" height="0.8rem"></p-skeleton> <p-skeleton width="100%" height="1.1rem"></p-skeleton> <p-skeleton width="60%" height="1.1rem"></p-skeleton>  <div class="mt-auto pt-2 flex justify-between items-center">
-                    <p-skeleton width="50%" height="1.5rem"></p-skeleton> <p-skeleton shape="circle" size="2rem"></p-skeleton> </div>
-              </div>
+             <div class="aspect-[3/4] bg-gray-50 relative p-1">
+                <p-skeleton width="100%" height="100%"></p-skeleton>
+             </div>
+             <div class="p-4 flex flex-col gap-2 flex-grow">
+                <p-skeleton width="30%" height="0.8rem"></p-skeleton> 
+                <p-skeleton width="100%" height="1.1rem"></p-skeleton> 
+                <p-skeleton width="60%" height="1.1rem"></p-skeleton>  
+                <div class="mt-auto pt-2 flex justify-between items-center">
+                   <p-skeleton width="50%" height="1.5rem"></p-skeleton> 
+                   <p-skeleton shape="circle" size="2rem"></p-skeleton> 
+                </div>
+             </div>
            </div>
         </div>
 

@@ -1,0 +1,86 @@
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+  <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">Lịch sử đơn hàng</h2>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+        <i class="pi pi-shopping-bag text-3xl text-gray-400"></i>
+    </div>
+    <h3 class="text-gray-900 font-medium mb-1">Chưa có đơn hàng nào</h3>
+    <p class="text-gray-500 text-sm mb-6">Hãy khám phá các sản phẩm mới nhất của chúng tôi.</p>
+    <button pButton label="Mua sắm ngay" routerLink="/catalog" class="p-button-rounded bg-pink-600 border-pink-600 hover:bg-pink-700"></button>
+  </div>
+
+  <div *ngIf="orders.length > 0 || isLoading" class="overflow-x-auto">
+      <p-table [value]="orders" 
+               [lazy]="true"
+               (onLazyLoad)="loadOrders($event)"
+               [paginator]="true"
+               [rows]="pageSize"
+               [totalRecords]="totalRecords"
+               [loading]="isLoading"
+               [showCurrentPageReport]="true"
+               currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} đơn"
+               [tableStyle]="{ 'min-width': '600px' }"
+               styleClass="p-datatable-sm align-middle">
+        
+        <ng-template pTemplate="header">
+            <tr class="text-sm uppercase text-gray-500 bg-gray-50">
+                <th class="py-3 pl-4">Mã đơn</th>
+                <th>Ngày đặt</th>
+                <th>Sản phẩm</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th class="text-center">Thao tác</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-order>
+            <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <td class="pl-4 py-4">
+                    <span class="font-medium text-gray-900 block">#{{ order.id | slice:0:8 }}</span>
+                </td>
+
+                <td class="text-gray-600">
+                    {{ order.orderDate || order.createdDate | date:'dd/MM/yyyy' }}
+                </td>
+
+                <td>
+                    <div class="flex flex-col">
+                        <span class="text-gray-900 font-medium text-sm truncate max-w-[180px]" 
+                              [pTooltip]="order.firstProductName">
+                            {{ order.firstProductName }}
+                        </span>
+                        <span *ngIf="order.itemsCount > 1" class="text-xs text-gray-500">
+                            và {{ order.itemsCount - 1 }} sản phẩm khác
+                        </span>
+                    </div>
+                </td>
+
+                <td class="font-bold text-pink-600">
+                    {{ order.totalPrice | currency:'VND':'symbol':'1.0-0' }}
+                </td>
+
+                <td>
+                    <p-tag [value]="getStatusLabel(order.status)" 
+                           [severity]="getStatusSeverity(order.status)" 
+                           [rounded]="true"
+                           styleClass="text-xs font-medium px-2 py-1">
+                    </p-tag>
+                </td>
+
+                <td class="text-center">
+                    <button pButton icon="pi pi-eye" 
+                            [rounded]="true" 
+                            [text]="true" 
+                            severity="secondary" 
+                            pTooltip="Xem chi tiết" 
+                            tooltipPosition="top"
+                            [routerLink]="['/profile/orders', order.id]">
+              
+                    </button>
+                </td>
+            </tr>
+        </ng-template>
+      </p-table>
+  </div>
+</div>

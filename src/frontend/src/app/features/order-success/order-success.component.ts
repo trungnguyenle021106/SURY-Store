@@ -1,24 +1,25 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Nhớ import CommonModule để dùng *ngIf, *ngFor
-import { Router, RouterLink } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; 
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-order-success',
+  standalone: true,
   imports: [CommonModule, RouterLink, ButtonModule],
   templateUrl: './order-success.component.html'
 })
 export class OrderSuccessComponent implements OnInit {
-  private router = inject(Router);
-
+  today = new Date(); 
   orderInfo: any = null;
 
   ngOnInit(): void {
-    // Lấy dữ liệu được gửi từ trang Checkout
     const state = history.state;
-    
-    // Kiểm tra xem có dữ liệu không (tránh trường hợp user F5 hoặc vào trực tiếp link)
-    if (state && state.orderId) {
+    console.log('Order Success State:', state);
+
+    // SỬA: Kiểm tra nếu có 'items' hoặc 'customer' thì coi như hợp lệ
+    // Bỏ điều kiện bắt buộc phải có orderId
+    if (state && (state.items || state.customer || state.total)) {
       this.orderInfo = state;
     }
   }

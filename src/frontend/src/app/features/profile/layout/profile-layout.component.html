@@ -1,61 +1,72 @@
- <div class="bg-gray-50 min-h-screen py-10">
-      <div class="container mx-auto px-4">
-        
-        <div class="mb-6 text-sm text-gray-500">
-          <a routerLink="/" class="hover:text-pink-600">Trang chủ</a> 
-          <span class="mx-2">/</span> 
-          <span class="text-gray-900">Tài khoản của tôi</span>
-        </div>
-
-        <div class="flex flex-col lg:flex-row gap-8">
-          
-          <aside class="w-full lg:w-64 flex-shrink-0">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div class="p-6 border-b border-gray-100 flex items-center gap-3">
-                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 font-bold text-xl">
-                  U </div>
-                <div>
-                  <p class="text-xs text-gray-500">Tài khoản của</p>
-                  <p class="font-bold text-gray-900 text-sm truncate">Khách hàng</p>
-                </div>
-              </div>
-              
-              <nav class="p-2 space-y-1">
-                <a routerLink="/profile/info" 
-                   routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
-                   class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                   <i class="pi pi-user text-lg"></i> Thông tin tài khoản
-                </a>
-
-                <a routerLink="/profile/orders" 
-                   routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
-                   class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                   <i class="pi pi-list text-lg"></i> Lịch sử đơn hàng
-                </a>
-
-                <a routerLink="/profile/addresses" 
-                   routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
-                   class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                   <i class="pi pi-map-marker text-lg"></i> Sổ địa chỉ
-                </a>
-
-                <a routerLink="/profile/password" 
-                   routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
-                   class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                   <i class="pi pi-lock text-lg"></i> Đổi mật khẩu
-                </a>
-
-                <button class="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left mt-2 border-t border-gray-100">
-                   <i class="pi pi-sign-out text-lg"></i> Đăng xuất
-                </button>
-              </nav>
-            </div>
-          </aside>
-
-          <main class="flex-1">
-            <router-outlet></router-outlet>
-          </main>
-
-        </div>
-      </div>
+<div class="bg-gray-50 min-h-screen py-10">
+  <div class="container mx-auto px-4">
+    
+    <div class="mb-6 text-sm text-gray-500">
+      <a routerLink="/" class="hover:text-pink-600">Trang chủ</a> 
+      <span class="mx-2">/</span> 
+      <span class="text-gray-900">Tài khoản của tôi</span>
     </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+      
+      <aside class="w-full lg:w-64 flex-shrink-0">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+          
+          <div class="p-6 border-b border-gray-100 flex items-center gap-3">
+            
+            <div class="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden border border-gray-100">
+               <img *ngIf="avatarUrl()" [src]="avatarUrl()" alt="Avatar" class="w-full h-full object-cover">
+               
+               <div *ngIf="!avatarUrl()" class="w-full h-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold text-xl uppercase">
+                  {{ userInitial }}
+               </div>
+            </div>
+
+            <div class="overflow-hidden">
+              <p class="text-xs text-gray-500">Tài khoản của</p>
+              <p class="font-bold text-gray-900 text-sm truncate" [title]="displayName">
+                {{ displayName }}
+              </p>
+            </div>
+          </div>
+          
+          <nav class="p-2 space-y-1">
+            <a routerLink="/profile/info" 
+               routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
+               class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+               <i class="pi pi-user text-lg w-6 text-center"></i> Thông tin tài khoản
+            </a>
+
+            <a routerLink="/profile/orders" 
+               routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
+               class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+               <i class="pi pi-list text-lg w-6 text-center"></i> Lịch sử đơn hàng
+            </a>
+
+            <a routerLink="/profile/addresses" 
+               routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
+               class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+               <i class="pi pi-map-marker text-lg w-6 text-center"></i> Sổ địa chỉ
+            </a>
+
+            <a routerLink="/profile/password" 
+               routerLinkActive="bg-pink-50 text-pink-700 font-medium" 
+               class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+               <i class="pi pi-lock text-lg w-6 text-center"></i> Đổi mật khẩu
+            </a>
+
+            <button (click)="onLogout()" 
+                    class="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left mt-2 border-t border-gray-100">
+                <i class="pi pi-sign-out text-lg w-6 text-center"></i> Đăng xuất
+            </button>
+          </nav>
+        </div>
+      </aside>
+
+      <main class="flex-1">
+        <router-outlet></router-outlet>
+      </main>
+
+    </div>
+  </div>
+</div>

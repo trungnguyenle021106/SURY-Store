@@ -29,9 +29,6 @@ export class BasketComponent {
   private messageService = inject(MessageService);
   private router = inject(Router);
 
-  // Không cần ngOnInit để load fake data nữa
-  // Service đã tự động load từ LocalStorage ngay khi khởi tạo
-
   /**
    * Xử lý khi người dùng thay đổi số lượng (+/-)
    * Thay vì viết lại logic update, ta tận dụng hàm addItemToBasket của Service

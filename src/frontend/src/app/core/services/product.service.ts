@@ -15,12 +15,14 @@ export class ProductService {
         pageSize: number = 10,
         keyword?: string,
         categoryId?: string,
-        excludeId?: string
+        excludeId?: string,
+        includeDrafts: boolean = false // <--- THÊM THAM SỐ NÀY (Mặc định false)
     ): Observable<ProductListResponse> {
 
         let params = new HttpParams()
             .set('pageNumber', pageNumber)
-            .set('pageSize', pageSize);
+            .set('pageSize', pageSize)
+            .set('includeDrafts', includeDrafts); // <--- Luôn gửi lên BE
 
         if (keyword) {
             params = params.set('keyword', keyword);

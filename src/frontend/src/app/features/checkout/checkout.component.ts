@@ -1,26 +1,32 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 // PrimeNG
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea'; // [MỚI] Dùng TextareaModule thay InputTextareaModule
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { RadioButtonModule } from 'primeng/radiobutton'; // [MỚI] Để chọn địa chỉ
 
-// Services
+// Services & Models
 import { BasketService } from '../../core/services/basket.service';
 import { UserService } from '../../core/services/user.service';
 import { CommonService } from '../../core/services/common.service';
+import { AddressService } from '../../core/services/address.service'; // [MỚI]
+import { Ward } from '../../core/models/common.models';
+import { UserAddress } from '../../core/models/address.models';
 
 @Component({
   selector: 'app-checkout',
+  standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, RouterLink,
-    InputTextModule, InputTextarea, ButtonModule, DropdownModule, ToastModule
+    CommonModule, ReactiveFormsModule, RouterLink, FormsModule,
+    InputTextModule, TextareaModule, ButtonModule, DropdownModule, ToastModule, RadioButtonModule
   ],
   providers: [MessageService],
   templateUrl: './checkout.component.html'
@@ -33,69 +39,97 @@ export class CheckoutComponent implements OnInit {
   public basketService = inject(BasketService);
   private userService = inject(UserService);
   private commonService = inject(CommonService);
+  private addressService = inject(AddressService); // [MỚI]
 
   checkoutForm!: FormGroup;
   isLoading = false;
-
-  // Mock Wards (Vì chưa có API thật chạy được, ta dùng mock cho UI)
-  // Thực tế bạn sẽ gọi commonService.getWards()
-  wards = [
-    { id: 1, name: 'Phường 1' },
-    { id: 2, name: 'Phường 2' },
-    { id: 3, name: 'Phường 3' },
-    { id: 4, name: 'Phường Bến Nghé' },
-    { id: 5, name: 'Phường Tân Định' }
-  ];
+  
+  wards: Ward[] = [];
+  savedAddresses: UserAddress[] = []; // Danh sách địa chỉ đã lưu
+  selectedAddressId: string | null = null; // ID địa chỉ đang chọn
 
   ngOnInit(): void {
-    // 1. Init Form
-    this.checkoutForm = this.fb.group({
-      receiverName: ['', [Validators.required]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      street: ['', [Validators.required]], // Số nhà, tên đường
-      ward: [null, [Validators.required]], // ID Phường
-      note: ['']
-    });
-
-    // 2. Check giỏ hàng (Nếu rỗng thì đá về trang chủ)
     if (!this.basketService.cart() || this.basketService.cartCount() === 0) {
       this.router.navigate(['/']);
       return;
     }
 
-    // 3. Load User Info (Autofill)
-    this.loadUserProfile();
-    
-    // 4. Load Wards (Nếu có API thật thì uncomment dòng dưới)
-    // this.loadWards(); 
+    this.checkoutForm = this.fb.group({
+      receiverName: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      street: ['', [Validators.required]],
+      ward: [null, [Validators.required]], 
+      note: ['']
+    });
+
+    this.loadInitialData();
   }
 
-  loadUserProfile() {
-    this.userService.getMe().subscribe({
-      next: (profile) => {
-        // Tự động điền tên, sđt từ profile
-        this.checkoutForm.patchValue({
-          receiverName: profile.fullName,
-          // Giả sử lấy SĐT từ địa chỉ mặc định hoặc field nào đó nếu có
-          // phoneNumber: profile.phoneNumber 
-        });
+  loadInitialData() {
+    this.isLoading = true;
 
-        // Nếu user đã có địa chỉ trong profile, lấy địa chỉ đầu tiên hoặc mặc định để điền
-        if (profile.addresses && profile.addresses.length > 0) {
-          const defaultAddr = profile.addresses.find(a => a.isDefault) || profile.addresses[0];
-          this.checkoutForm.patchValue({
-            receiverName: defaultAddr.receiverName,
-            phoneNumber: defaultAddr.phoneNumber,
-            street: defaultAddr.street,
-            // ward: defaultAddr.wardId // Cần map đúng ID
-          });
+    forkJoin({
+      wardsData: this.commonService.getWards(),
+      profileData: this.userService.getMe(),
+      addressData: this.addressService.getAddresses() // [MỚI] Load thêm sổ địa chỉ
+    }).subscribe({
+      next: (res) => {
+        // 1. Set Wards
+        this.wards = res.wardsData.wards;
+        
+        // 2. Set Saved Addresses
+        this.savedAddresses = res.addressData.addresses;
+
+        // 3. Logic Autofill thông minh
+        // Ưu tiên 1: Địa chỉ mặc định trong Sổ địa chỉ
+        const defaultAddr = this.savedAddresses.find(a => a.isDefault);
+        
+        if (defaultAddr) {
+           this.onSelectAddress(defaultAddr);
+        } else {
+           // Ưu tiên 2: Lấy tên từ Profile điền tạm
+           this.checkoutForm.patchValue({
+             receiverName: res.profileData.fullName
+           });
         }
+        
+        this.isLoading = false;
       },
-      error: () => console.log('Khách vãng lai hoặc chưa login')
+      error: (err) => {
+        console.error(err);
+        this.isLoading = false;
+      }
     });
   }
 
-  // Tính phí ship
+  // [MỚI] Hàm xử lý khi người dùng chọn 1 địa chỉ từ list
+  onSelectAddress(addr: UserAddress) {
+    this.selectedAddressId = addr.id;
+
+    // Logic Map tên phường (trong sổ địa chỉ) -> ID phường (để dropdown hiểu)
+    const foundWard = this.wards.find(w => w.name === addr.wardDescription);
+    
+    this.checkoutForm.patchValue({
+      receiverName: addr.receiverName,
+      phoneNumber: addr.phoneNumber,
+      street: addr.street,
+      ward: foundWard ? foundWard.key : null 
+    });
+    
+    // Mark form as dirty để user biết dữ liệu đã thay đổi
+    this.checkoutForm.markAsDirty();
+  }
+
+  // [MỚI] Khi user chọn "Nhập địa chỉ mới"
+  onNewAddress() {
+    this.selectedAddressId = 'new';
+    this.checkoutForm.reset();
+    // Lấy lại tên user điền vào cho tiện
+    this.userService.getMe().subscribe(p => {
+        this.checkoutForm.patchValue({ receiverName: p.fullName });
+    });
+  }
+
   get shippingFee(): number {
     const total = this.basketService.cartTotal();
     return total >= 500000 ? 0 : 30000;
@@ -105,20 +139,24 @@ export class CheckoutComponent implements OnInit {
     return this.basketService.cartTotal() + this.shippingFee;
   }
 
- onSubmit() {
+  onSubmit() {
     if (this.checkoutForm.invalid) {
       this.checkoutForm.markAllAsTouched();
-      this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng điền đầy đủ thông tin giao hàng.' });
+      this.messageService.add({ severity: 'warn', summary: 'Thông tin thiếu', detail: 'Vui lòng điền đầy đủ thông tin giao hàng.' });
       return;
     }
 
     this.isLoading = true;
     const formValue = this.checkoutForm.value;
 
-    // 1. Lưu lại giỏ hàng hiện tại trước khi bị Service xóa mất
-    const currentCart = this.basketService.cart(); 
-    const finalTotal = this.finalTotal;
-    const shippingFee = this.shippingFee;
+    const currentCartItems = this.basketService.cart()?.items;
+    const snapshotData = {
+      orderId: 'PENDING', 
+      customer: formValue,
+      items: currentCartItems,
+      total: this.finalTotal,
+      shippingFee: this.shippingFee
+    };
 
     const payload = {
       receiverName: formValue.receiverName,
@@ -127,26 +165,14 @@ export class CheckoutComponent implements OnInit {
       ward: formValue.ward,
       note: formValue.note
     };
-   this.router.navigate(['/order-success'], { 
-            state: { 
-              orderId: 'ORD-' + new Date().getTime(), // Giả lập mã đơn hàng
-              customer: formValue,
-              items: currentCart?.items,
-              total: finalTotal,
-              shippingFee: shippingFee
-            } 
-          });
+
     this.basketService.checkout(payload).subscribe({
       next: (res) => {
         if (res.isSuccess) {
-          // 2. Chuyển trang kèm theo dữ liệu đơn hàng (State)
           this.router.navigate(['/order-success'], { 
             state: { 
-              orderId: 'ORD-' + new Date().getTime(), // Giả lập mã đơn hàng
-              customer: formValue,
-              items: currentCart?.items,
-              total: finalTotal,
-              shippingFee: shippingFee
+              ...snapshotData,
+              orderId: res.message || 'ORD-NEW'
             } 
           });
         } else {
@@ -159,5 +185,5 @@ export class CheckoutComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Lỗi hệ thống', detail: 'Không thể đặt hàng lúc này.' });
       }
     });
-}
+  }
 }

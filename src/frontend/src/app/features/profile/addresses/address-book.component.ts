@@ -1,22 +1,24 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable, forkJoin } from 'rxjs'; // Thêm forkJoin
 
-// PrimeNG Modules
+// PrimeNG
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog'; // Modal Thêm/Sửa
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
-import { ConfirmDialogModule } from 'primeng/confirmdialog'; // Hộp thoại xác nhận xóa
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 // Services & Models
 import { AddressService } from '../../../core/services/address.service';
+import { CommonService } from '../../../core/services/common.service'; // Import CommonService
 import { UserAddress } from '../../../core/models/address.models';
-import { Observable } from 'rxjs/internal/Observable';
+import { Ward } from '../../../core/models/common.models'; // Import Ward model
 
 @Component({
   selector: 'app-address-book',
@@ -31,70 +33,86 @@ import { Observable } from 'rxjs/internal/Observable';
 })
 export class AddressBookComponent implements OnInit {
   addressService = inject(AddressService);
+  commonService = inject(CommonService); // Inject CommonService
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
   fb = inject(FormBuilder);
 
   addresses: UserAddress[] = [];
+  wards: Ward[] = []; // Danh sách phường từ API
+
   isLoading = false;
   isSaving = false;
 
-  // Dialog State
   displayDialog = false;
   isEditMode = false;
   currentEditId: string | null = null;
   addressForm: FormGroup;
-
-  // Mock Wards (Giống trang Checkout)
-  wards = [
-    { id: 1, name: 'Phường 1' },
-    { id: 2, name: 'Phường 2' },
-    { id: 3, name: 'Phường Bến Nghé' },
-    { id: 4, name: 'Phường Tân Định' }
-  ];
 
   constructor() {
     this.addressForm = this.fb.group({
       receiverName: ['', Validators.required],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       street: ['', Validators.required],
-      ward: [null, Validators.required],
+      ward: [null, Validators.required], // Binding vào ID (number)
       isDefault: [false]
     });
   }
 
   ngOnInit() {
-    this.loadAddresses();
+    this.loadInitialData();
   }
 
-  loadAddresses() {
+  // Load cả danh sách địa chỉ và danh sách phường cùng lúc
+  loadInitialData() {
     this.isLoading = true;
-    this.addressService.getAddresses().subscribe({
-      next: (res) => {
-        this.addresses = res.addresses;
+    
+    forkJoin({
+      addressRes: this.addressService.getAddresses(),
+      wardRes: this.commonService.getWards()
+    }).subscribe({
+      next: ({ addressRes, wardRes }) => {
+        this.addresses = addressRes.addresses;
+        this.wards = wardRes.wards;
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
-        // Mock data nếu API chưa chạy
-        this.addresses = [];
+        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải dữ liệu.' });
       }
+    });
+  }
+
+  loadAddressesOnly() {
+    this.isLoading = true;
+    this.addressService.getAddresses().subscribe({
+        next: (res) => {
+            this.addresses = res.addresses;
+            this.isLoading = false;
+        },
+        error: () => this.isLoading = false
     });
   }
 
   openDialog(addr?: UserAddress) {
     this.displayDialog = true;
+    
     if (addr) {
       this.isEditMode = true;
       this.currentEditId = addr.id;
-      // Patch value. Lưu ý: Cần map tên phường về ID nếu có thể. Ở đây ta giả định wardDescription map được.
-      // Vì mock data đơn giản nên ta chỉ patch các field text, dropdown ward có thể không khớp nếu không có logic map ngược.
+      
+      // [SỬA LOGIC] Tìm key dựa trên name
+      // API Address trả về "wardDescription" (VD: "Phường Thủ Dầu Một")
+      // API Ward trả về "name" (VD: "Phường Thủ Dầu Một")
+      const foundWard = this.wards.find(w => w.name === addr.wardDescription);
+      const wardKey = foundWard ? foundWard.key : null;
+
       this.addressForm.patchValue({
         receiverName: addr.receiverName,
         phoneNumber: addr.phoneNumber,
         street: addr.street,
-        isDefault: addr.isDefault
-        // ward: ... cần logic map từ string -> id
+        isDefault: addr.isDefault,
+        ward: wardKey // Patch chuỗi key (VD: "PhuongThuDauMot")
       });
     } else {
       this.isEditMode = false;
@@ -117,10 +135,10 @@ export class AddressBookComponent implements OnInit {
       : this.addressService.createAddress(payload) as Observable<any>;
     
     request$.subscribe({
-      next: (res) => {
+      next: () => {
         this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu địa chỉ.' });
         this.displayDialog = false;
-        this.loadAddresses(); // Reload list
+        this.loadAddressesOnly(); // Chỉ cần load lại danh sách địa chỉ
         this.isSaving = false;
       },
       error: () => {
@@ -133,6 +151,8 @@ export class AddressBookComponent implements OnInit {
   deleteAddress(id: string) {
     this.confirmationService.confirm({
       message: 'Bạn có chắc chắn muốn xóa địa chỉ này?',
+      header: 'Xác nhận xóa',
+      icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Xóa',
       rejectLabel: 'Hủy',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
@@ -140,7 +160,7 @@ export class AddressBookComponent implements OnInit {
         this.addressService.deleteAddress(id).subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Đã xóa', detail: 'Xóa địa chỉ thành công' });
-            this.loadAddresses();
+            this.loadAddressesOnly();
           }
         });
       }
@@ -151,7 +171,7 @@ export class AddressBookComponent implements OnInit {
     this.addressService.setDefaultAddress(id).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Cập nhật', detail: 'Đã đặt làm mặc định' });
-        this.loadAddresses();
+        this.loadAddressesOnly();
       }
     });
   }

@@ -4,13 +4,12 @@ import { PaginatedResult } from './core.models';
 // Mapping trạng thái dựa trên luồng xử lý: 
 // Submitted (New) -> Processing -> Shipped -> Completed (hoặc Cancelled)
 export enum OrderStatus {
-  Submitted = 0,      // Mới đặt
-  AwaitingValidation = 1, // Chờ xác nhận (nếu có)
-  StockConfirmed = 2, // Đã có hàng
-  Paid = 3,           // Đã thanh toán
-  Shipped = 4,        // Đang giao
-  Cancelled = 5,      // Đã hủy
-  Completed = 6       // Hoàn thành
+  Pending = 1,    // Chờ xác nhận
+  Processing = 2, // Đang xử lý
+  Shipping = 3,   // Đang giao hàng
+  Completed = 4,  // Hoàn thành
+  Cancelled = 5,  // Đã hủy
+  OutOfStock = 6  // Hết hàng
 }
 
 // --- SHARED ENTITIES ---
@@ -20,7 +19,7 @@ export interface OrderItem {
   productName: string;
   pictureUrl: string;
   unitPrice: number;
-  units: number; // Số lượng
+  quantity: number; // Số lượng
 }
 
 export interface OrderAddress {
@@ -35,16 +34,15 @@ export interface OrderAddress {
 // Dùng cho danh sách (Order Summary)
 export interface OrderSummary {
   id: string;
-  orderNumber: string; // Mã đơn hàng (VD: #ORD-2024-001)
   totalPrice: number;
   status: OrderStatus;
-  createdAt: string;   // Datetime string
+  orderDate: string;   // Datetime string
 }
 
 // Dùng cho chi tiết (Order Detail)
 export interface OrderDetail extends OrderSummary {
   description?: string;
-  address: OrderAddress;
+  shippingAddress: OrderAddress;
   orderItems: OrderItem[];
 }
 

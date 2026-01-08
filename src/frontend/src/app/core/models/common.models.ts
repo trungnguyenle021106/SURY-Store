@@ -1,6 +1,6 @@
 export interface Ward {
-  key: number;        
-  description: string; 
+  key: string; 
+  name: string; 
 }
 
 export interface WardListResponse {

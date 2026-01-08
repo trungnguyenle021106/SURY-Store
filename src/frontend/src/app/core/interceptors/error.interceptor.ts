@@ -45,7 +45,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               // Refresh thất bại (Refresh token cũng hết hạn) -> Logout
               isRefreshing = false;
               authService.currentUser.set(null);
-              router.navigate(['/auth/login']);
+              router.navigate(['/']);
               return throwError(() => refreshErr);
             })
           );
