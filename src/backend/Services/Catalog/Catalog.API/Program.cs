@@ -32,7 +32,24 @@ builder.Services.AddCustomJwtAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<CatalogDbContext>();
 
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra khi đang migrate database!");
+    }
+}
 app.UseCustomExceptionHandler();
 
 if (app.Environment.IsDevelopment())

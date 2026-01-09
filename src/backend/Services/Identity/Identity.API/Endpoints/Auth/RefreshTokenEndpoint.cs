@@ -24,7 +24,7 @@ namespace Identity.API.Endpoints.Auth
                 var baseCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,
                     SameSite = SameSiteMode.Strict,
                 };
 

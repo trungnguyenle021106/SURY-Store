@@ -22,7 +22,7 @@ namespace Identity.API.Endpoints.Auth
                 context.Response.Cookies.Append("access_token", result.AccessToken, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15) 
                 });
@@ -30,7 +30,7 @@ namespace Identity.API.Endpoints.Auth
                 context.Response.Cookies.Append("refresh_token", result.RefreshToken, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7) 
                 });
