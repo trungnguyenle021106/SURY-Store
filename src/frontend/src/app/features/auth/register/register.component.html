@@ -8,11 +8,17 @@
       </a>
     </div>
 
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">Đăng ký</h1>
+    <div class="text-center mb-6"> <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">Đăng ký</h1>
       <p class="text-gray-500 mt-2">Tạo tài khoản để mua sắm dễ dàng hơn</p>
     </div>
 
+    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+      <i class="pi pi-exclamation-circle text-orange-500 mt-0.5 text-lg"></i>
+      <div class="text-sm text-gray-700">
+        <span class="font-bold text-orange-700 block mb-0.5">Lưu ý quan trọng</span>
+        Hệ thống chỉ mang tính chất tham khảo (Demo). Quý khách vui lòng <span class="font-medium text-orange-700">mua trực tiếp tại cửa hàng</span>.
+      </div>
+    </div>
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
       
       <div class="flex flex-col gap-2">

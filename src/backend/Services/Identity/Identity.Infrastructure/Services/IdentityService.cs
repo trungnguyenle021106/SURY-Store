@@ -1,9 +1,15 @@
-﻿using FluentValidation;
+﻿using BuildingBlocks.Core.Exceptions;
+using FluentValidation;
 using Identity.Application.Common.Interfaces;
 using Identity.Application.Common.Models;
 using Identity.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
+using System.Text.Encodings.Web;
 
 
 namespace Identity.Infrastructure.Services
@@ -13,25 +19,44 @@ namespace Identity.Infrastructure.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly ITokenProvider _tokenProvider; 
-        private readonly IIdentityDbContext _dbContext; 
+        private readonly IIdentityDbContext _dbContext;
+        private readonly IEmailSender _emailSender; 
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IDistributedCache _cache;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
             ITokenProvider tokenProvider,
             IIdentityDbContext dbContext,
-            RoleManager<IdentityRole<Guid>> roleManager)
+            RoleManager<IdentityRole<Guid>> roleManager,
+            IDistributedCache cache,
+            IEmailSender emailSender,
+            IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _tokenProvider = tokenProvider;
             _dbContext = dbContext;
             _roleManager = roleManager;
+            _cache = cache;
+            _emailSender = emailSender;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Guid> RegisterUserAsync(string fullName, string email, string password, string role)
         {
+
             var existingUser = await _userManager.FindByEmailAsync(email);
             if (existingUser != null)
-                throw new ValidationException($"Email {email} đã được sử dụng.");
+                throw new DomainException($"Email {email} đã được sử dụng.");
+
+            string cacheKey = $"spam_block:{email.ToLower()}";
+
+            string? isBlocked = await _cache.GetStringAsync(cacheKey);
+
+            if (!string.IsNullOrEmpty(isBlocked))
+            {
+                throw new DomainException($"Email {email} đã đăng ký quá nhiều lần. Vui lòng quay lại sau 24 giờ.");
+            }
 
             var user = new ApplicationUser(fullName, email);
             var result = await _userManager.CreateAsync(user, password);
@@ -39,7 +64,7 @@ namespace Identity.Infrastructure.Services
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new ValidationException($"Đăng ký thất bại: {errors}");
+                throw new DomainException($"Đăng ký thất bại: {errors}");
             }
 
             if (await _roleManager.RoleExistsAsync(role))
@@ -48,10 +73,47 @@ namespace Identity.Infrastructure.Services
             }
             else
             {
-                throw new ValidationException($"Lỗi hệ thống: Role '{role}' chưa được khởi tạo.");
+                throw new DomainException($"Lỗi hệ thống: Role '{role}' chưa được khởi tạo.");
             }
 
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+            var baseUrl = $"{request?.Scheme}://{request?.Host}";
+
+            var callbackUrl = $"{baseUrl}/auth/verify-email?userId={user.Id}&code={code}";
+
+            await _emailSender.SendEmailAsync(email, "Xác nhận tài khoản",
+                $"Vui lòng <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>bấm vào đây</a> để kích hoạt tài khoản.");
+
+            await SetSpamBlockAsync(cacheKey);
             return user.Id;
+        }
+
+        private async Task SetSpamBlockAsync(string key)
+        {
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+            };
+            await _cache.SetStringAsync(key, "1", options);
+        }
+
+        public async Task ConfirmEmailAsync(string userId, string code)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) throw new ValidationException("User không tồn tại.");
+
+            // Decode token lại thành dạng gốc
+            var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
+
+            var result = await _userManager.ConfirmEmailAsync(user, decodedCode);
+            if (!result.Succeeded)
+            {
+                throw new ValidationException("Xác thực email thất bại hoặc token đã hết hạn.");
+            }
         }
 
         public async Task<AuthenticationResult> LoginAsync(string email, string password)

@@ -142,7 +142,6 @@
   ],
   "GlobalConfiguration": {
     // Đây là URL mà client sẽ gọi vào Gateway. 
-    // Trên Cloud, gateway của bạn đang map port 8080.
-    "BaseUrl": "http://localhost:8080"
+    "BaseUrl": "https://sury.store"
   }
 }

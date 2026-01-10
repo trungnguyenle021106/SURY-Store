@@ -24,7 +24,7 @@
             class="p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 mb-1">
-                    Đơn hàng <span class="text-pink-600">#{{ order.orderNumber || (order.id | slice:0:8) }}</span>
+                    Đơn hàng <span class="text-pink-600">#{{ order.id || (order.id | slice:0:8) }}</span>
                 </h1>
                 <p class="text-gray-500 text-sm">
                     Ngày đặt: {{ order.orderDate | date:'HH:mm - dd/MM/yyyy' }}

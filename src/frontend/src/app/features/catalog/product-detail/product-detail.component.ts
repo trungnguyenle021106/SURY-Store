@@ -15,12 +15,13 @@ import { Product } from '../../../core/models/catalog.models';
 import { MOCK_PRODUCTS } from '../../../shared/utils/mock-data';
 import { ProductService } from '../../../core/services/product.service';
 import { BasketService } from '../../../core/services/basket.service';
+import { ImageModule } from 'primeng/image';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, FormsModule,
+    CommonModule, RouterLink, FormsModule, ImageModule,
     ButtonModule, InputNumberModule, TagModule, ToastModule
   ],
   providers: [MessageService],
