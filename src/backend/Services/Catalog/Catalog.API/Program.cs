@@ -25,7 +25,7 @@ builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration, typeof(
 builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).Assembly);
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
-builder.Services.AddCustomCors(builder.Configuration);
+builder.Services.AddCustomCors(builder.Configuration); // Khi nào nhiều domain thì loại bỏ CORS này
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");

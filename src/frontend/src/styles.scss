@@ -36,3 +36,15 @@ body {
 .delay-100 { animation-delay: 0.1s; }
 .delay-200 { animation-delay: 0.2s; }
 .delay-300 { animation-delay: 0.3s; }
+
+/* Dùng !important để thắng được đoạn mã tự động của PrimeNG */
+:root {
+    color-scheme: light !important;
+}
+
+/* Ép các biến màu quay về trạng thái Light kể cả khi máy bật Dark mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: light !important;
+    }
+}

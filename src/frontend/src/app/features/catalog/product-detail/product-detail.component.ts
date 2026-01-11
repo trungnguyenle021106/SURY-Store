@@ -101,10 +101,21 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  get inventoryStatus() {
-    if (!this.product) return { label: '', severity: 'secondary' as const };
-    if (this.product.quantity === 0) return { label: 'Hết hàng', severity: 'danger' as const };
-    if (this.product.quantity < 5) return { label: 'Sắp hết hàng', severity: 'warning' as const };
+  getProductStatus(product: any) {
+    if (!product) return { label: '', severity: 'secondary' as const };
+
+    if (product.quantity === 0) {
+      return { label: 'Hết hàng', severity: 'danger' as const };
+    }
+
+    if (product.quantity < 5) {
+      return { label: 'Sắp hết', severity: 'warning' as const };
+    }
+
     return { label: 'Còn hàng', severity: 'success' as const };
+  }
+
+  get inventoryStatus() {
+    return this.getProductStatus(this.product);
   }
 }
