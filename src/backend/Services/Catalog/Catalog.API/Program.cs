@@ -5,6 +5,7 @@ using Carter;
 using Catalog.Application.Common.Interfaces;
 using Catalog.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,11 @@ builder.Services.AddCustomMapster(typeof(Catalog.Application.AssemblyReference).
 builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
 builder.Services.AddCustomCors(builder.Configuration);
-
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "Catalog_";
+});
 builder.Services.AddCarter();
 
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);

@@ -29,6 +29,7 @@ export class RegisterComponent {
 
   registerForm: FormGroup;
   isLoading = false;
+  isSuccess = false; // <--- THÊM BIẾN NÀY ĐỂ CHECK TRẠNG THÁI
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -48,13 +49,21 @@ export class RegisterComponent {
     this.authService.register(this.registerForm.value).subscribe({
       next: (res) => {
         this.isLoading = false;
-        this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đăng ký thành công! Vui lòng đăng nhập.' });
-        // Delay 1 chút rồi chuyển trang
-        setTimeout(() => this.router.navigate(['/auth/login']), 1500);
+        this.isSuccess = true; // <--- BẬT CỜ SUCCESS, KHÔNG REDIRECT NỮA
       },
       error: (err) => {
         this.isLoading = false;
-        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Email có thể đã tồn tại.' });
+        
+        // Lấy message lỗi từ Backend (ví dụ lỗi Spam block 24h hoặc Email duplicate)
+        // Cấu trúc lỗi tùy thuộc vào GlobalExceptionHandler của bạn trả về (thường là err.error.detail hoặc err.error)
+        const errorMessage = err.error?.detail || err.error || 'Có lỗi xảy ra, vui lòng thử lại.';
+        
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Đăng ký thất bại', 
+          detail: errorMessage,
+          life: 5000 // Hiện lâu hơn chút để user đọc kịp lỗi
+        });
       }
     });
   }

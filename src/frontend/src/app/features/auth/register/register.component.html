@@ -8,44 +8,68 @@
       </a>
     </div>
 
-    <div class="text-center mb-6"> <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">Đăng ký</h1>
-      <p class="text-gray-500 mt-2">Tạo tài khoản để mua sắm dễ dàng hơn</p>
+    <div *ngIf="isSuccess" class="text-center animate-fade-in">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-envelope text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Kiểm tra email của bạn</h2>
+        <p class="text-gray-600 mb-6">
+            Chúng tôi đã gửi liên kết xác thực đến <span class="font-bold text-gray-900">{{ registerForm.get('email')?.value }}</span>.
+            <br>Vui lòng kiểm tra (bao gồm cả mục Spam) để kích hoạt tài khoản.
+        </p>
+        
+        <div class="space-y-3">
+            <a routerLink="/auth/login" class="block w-full bg-pink-600 text-white font-bold py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                Đến trang đăng nhập
+            </a>
+            <button (click)="isSuccess = false" class="text-sm text-gray-500 hover:text-pink-600 underline">
+                Quay lại đăng ký (nếu nhập sai email)
+            </button>
+        </div>
     </div>
 
-    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-      <i class="pi pi-exclamation-circle text-orange-500 mt-0.5 text-lg"></i>
-      <div class="text-sm text-gray-700">
-        <span class="font-bold text-orange-700 block mb-0.5">Lưu ý quan trọng</span>
-        Hệ thống chỉ mang tính chất tham khảo (Demo). Quý khách vui lòng <span class="font-medium text-orange-700">mua trực tiếp tại cửa hàng</span>.
-      </div>
-    </div>
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
-      
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-700">Họ và tên</label>
-        <input pInputText formControlName="fullName" placeholder="Nguyễn Văn A" class="w-full" />
-        <small *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched" class="text-red-500">Vui lòng nhập họ tên.</small>
-      </div>
+    <ng-container *ngIf="!isSuccess">
+        <div class="text-center mb-6"> 
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">Đăng ký</h1>
+            <p class="text-gray-500 mt-2">Tạo tài khoản để mua sắm dễ dàng hơn</p>
+        </div>
 
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-700">Email</label>
-        <input pInputText formControlName="email" placeholder="example@gmail.com" class="w-full" />
-        <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500">Email không hợp lệ.</small>
-      </div>
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <i class="pi pi-exclamation-circle text-orange-500 mt-0.5 text-lg"></i>
+            <div class="text-sm text-gray-700">
+                <span class="font-bold text-orange-700 block mb-0.5">Lưu ý quan trọng</span>
+                Email xác thực sẽ hết hạn trong <span class="font-bold">24 giờ</span>. Nếu không nhận được, vui lòng kiểm tra mục Spam.
+            </div>
+        </div>
 
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-700">Mật khẩu</label>
-        <p-password formControlName="password" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" 
-            [feedback]="true" promptLabel="Nhập mật khẩu" weakLabel="Yếu" mediumLabel="Trung bình" strongLabel="Mạnh"></p-password>
-         <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500">Mật khẩu phải có ít nhất 6 ký tự.</small>
-      </div>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Họ và tên</label>
+                <input pInputText formControlName="fullName" placeholder="Nguyễn Văn A" class="w-full" />
+                <small *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched" class="text-red-500">Vui lòng nhập họ tên.</small>
+            </div>
 
-      <button pButton label="Đăng ký tài khoản" type="submit" [loading]="isLoading" class="w-full bg-pink-600 border-pink-600 hover:bg-pink-700 font-bold py-3"></button>
-    </form>
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Email</label>
+                <input pInputText formControlName="email" placeholder="example@gmail.com" class="w-full" />
+                <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500">Email không hợp lệ.</small>
+            </div>
 
-    <div class="mt-8 text-center text-sm text-gray-500">
-      Đã có tài khoản? 
-      <a routerLink="/auth/login" class="text-pink-600 font-bold hover:underline">Đăng nhập</a>
-    </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Mật khẩu</label>
+                <p-password formControlName="password" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" 
+                    [feedback]="true" promptLabel="Nhập mật khẩu" weakLabel="Yếu" mediumLabel="Trung bình" strongLabel="Mạnh"></p-password>
+                 <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500">Mật khẩu phải có ít nhất 6 ký tự.</small>
+            </div>
+
+            <button pButton label="Đăng ký tài khoản" type="submit" [loading]="isLoading" class="w-full bg-pink-600 border-pink-600 hover:bg-pink-700 font-bold py-3"></button>
+        </form>
+
+        <div class="mt-8 text-center text-sm text-gray-500">
+            Đã có tài khoản? 
+            <a routerLink="/auth/login" class="text-pink-600 font-bold hover:underline">Đăng nhập</a>
+        </div>
+    </ng-container>
+
   </div>
 </div>

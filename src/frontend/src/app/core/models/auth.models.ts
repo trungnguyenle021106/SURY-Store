@@ -26,8 +26,8 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface ForgotPasswordResponse {
-  verifyToken: string;
+export interface ResetPasswordResponse {
+  isSuccess: boolean;
 }
 
 export interface AuthUserInfo {

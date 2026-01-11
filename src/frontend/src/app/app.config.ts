@@ -6,15 +6,16 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withDebugTracing } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([credentialsInterceptor, errorInterceptor, authInterceptor])),
+    provideHttpClient(withInterceptors([credentialsInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
+    provideRouter(routes, withDebugTracing()),
     providePrimeNG({
         theme: { preset: Aura }
     })

@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from "@angular/core";
 import { Observable, tap, catchError, of, map } from "rxjs"; // Thêm operators
 import { environment } from "../../environments/environment";
 import { IdResponse, SuccessResponse } from "../models/core.models";
-import { AuthUserInfo, ForgotPasswordRequest, ForgotPasswordResponse, LoginRequest, RegisterRequest, ResetPasswordRequest } from "../models/auth.models";
+import { AuthUserInfo, ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, ResetPasswordResponse } from "../models/auth.models";
 import { Router } from "@angular/router";
 
 @Injectable({
@@ -47,13 +47,13 @@ export class AuthService {
   }
 
   // 5. Forgot Password
-  forgotPassword(payload: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
-    return this.http.post<ForgotPasswordResponse>(`${this.baseUrl}/forgot-password`, payload);
+  forgotPassword(payload: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/forgot-password`, payload);
   }
 
   // 6. Reset Password
-  resetPassword(payload: ResetPasswordRequest): Observable<SuccessResponse> {
-    return this.http.post<SuccessResponse>(`${this.baseUrl}/reset-password`, payload);
+  resetPassword(payload: ResetPasswordRequest): Observable<ResetPasswordResponse> {
+    return this.http.post<ResetPasswordResponse>(`${this.baseUrl}/reset-password`, payload);
   }
 
   // 7. Get Current User Info (Gọi cái này khi App khởi động hoặc sau khi Login)
@@ -62,7 +62,7 @@ export class AuthService {
   }
 
   // --- HELPER METHODS ---
-  
+
   // Hàm này dùng để load thông tin user và set vào Signal
   fetchUserInfo(): Observable<AuthUserInfo | null> {
     return this.getTokenInfo().pipe(

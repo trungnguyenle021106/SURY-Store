@@ -11,7 +11,7 @@ namespace Identity.Application.CQRS.Auth.Commands.ResetPassword
                 .EmailAddress().WithMessage("Email không hợp lệ.");
 
             RuleFor(x => x.VerifyToken)
-                .NotEmpty().WithMessage("Reset Token không được bỏ trống.");
+                .NotEmpty().WithMessage("Token xác thực không được để trống.");
 
             RuleFor(x => x.NewPassword)
                 .NotEmpty().WithMessage("Mật khẩu mới không được bỏ trống.")

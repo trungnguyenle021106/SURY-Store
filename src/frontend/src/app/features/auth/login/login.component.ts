@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core'; // Bỏ OnInit
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router'; // Bỏ ActivatedRoute
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 // PrimeNG
@@ -28,8 +28,8 @@ export class LoginComponent {
   authService = inject(AuthService);
   router = inject(Router);
   messageService = inject(MessageService);
-  userService = inject(AuthService); 
-  
+  // Không cần inject ActivatedRoute nữa
+
   loginForm: FormGroup;
   isLoading = false;
 
@@ -39,6 +39,9 @@ export class LoginComponent {
       password: ['', Validators.required]
     });
   }
+
+  // --- ĐÃ XÓA ngOnInit ---
+  // Việc bắt URL ?verifyStatus=... giờ là việc của AppComponent lo.
 
   onSubmit() {
     if (this.loginForm.invalid) {
@@ -54,19 +57,24 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading = false;
-
-        const errorMsg = err.error?.message || 'Email hoặc mật khẩu không đúng.';
-        this.messageService.add({ severity: 'error', summary: 'Đăng nhập thất bại', detail: errorMsg });
+        
+        // Vẫn giữ logic hiển thị lỗi khi User bấm nút Đăng nhập mà bị lỗi
+        const errorMsg = err.error?.detail || err.error?.message || 'Email hoặc mật khẩu không đúng.';
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Đăng nhập thất bại', 
+          detail: errorMsg 
+        });
       }
     });
   }
 
   checkUserRoleAndRedirect() {
-    this.userService.getTokenInfo().subscribe(user => {
+    this.authService.getTokenInfo().subscribe(user => {
       if (user.roles.includes('Admin')) {
         this.router.navigate(['/admin/dashboard']);
       } else {
-        this.router.navigate(['/']); // Về trang chủ khách hàng
+        this.router.navigate(['/']); 
       }
     });
   }
