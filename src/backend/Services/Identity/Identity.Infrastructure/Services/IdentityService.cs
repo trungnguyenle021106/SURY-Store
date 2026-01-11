@@ -18,9 +18,9 @@ namespace Identity.Infrastructure.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
-        private readonly ITokenProvider _tokenProvider; 
+        private readonly ITokenProvider _tokenProvider;
         private readonly IIdentityDbContext _dbContext;
-        private readonly IEmailSender _emailSender; 
+        private readonly IEmailSender _emailSender;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IDistributedCache _cache;
 
@@ -44,19 +44,27 @@ namespace Identity.Infrastructure.Services
 
         public async Task<Guid> RegisterUserAsync(string fullName, string email, string password, string role)
         {
-
-            var existingUser = await _userManager.FindByEmailAsync(email);
-            if (existingUser != null)
-                throw new DomainException($"Email {email} đã được sử dụng.");
-
             string cacheKey = $"spam_block:{email.ToLower()}";
-
             string? isBlocked = await _cache.GetStringAsync(cacheKey);
 
             if (!string.IsNullOrEmpty(isBlocked))
             {
-                throw new DomainException($"Email {email} đã đăng ký quá nhiều lần. Vui lòng quay lại sau 24 giờ.");
+                throw new DomainException(
+                     $"Email xác thực đã được gửi. Vui lòng kiểm tra hộp thư (bao gồm Spam) hoặc quay lại sau 24 giờ.");
             }
+
+            var existingUser = await _userManager.FindByEmailAsync(email);
+
+            if (existingUser != null && !existingUser.EmailConfirmed)
+            {
+                await SendTokenVerifyEmail(existingUser, email, cacheKey);
+                throw new DomainException(
+                    $"Email {email} đã được đăng ký nhưng chưa xác nhận. " +
+                    $"Vui lòng kiểm tra email để kích hoạt tài khoản.");
+            }
+
+            if (existingUser != null)
+                throw new DomainException($"Email {email} đã được sử dụng.");
 
             var user = new ApplicationUser(fullName, email);
             var result = await _userManager.CreateAsync(user, password);
@@ -75,21 +83,23 @@ namespace Identity.Infrastructure.Services
             {
                 throw new DomainException($"Lỗi hệ thống: Role '{role}' chưa được khởi tạo.");
             }
+            await SendTokenVerifyEmail(user, email, cacheKey);
+            return user.Id;
+        }
 
+        private async Task SendTokenVerifyEmail(ApplicationUser user, string email, string cacheKey)
+        {
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
-            var request = _httpContextAccessor.HttpContext?.Request;
-            var baseUrl = $"{request?.Scheme}://{request?.Host}";
+            var baseUrl = $"https://sury.store/api";
 
             var callbackUrl = $"{baseUrl}/auth/verify-email?userId={user.Id}&code={code}";
 
             await _emailSender.SendEmailAsync(email, "Xác nhận tài khoản",
                 $"Vui lòng <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>bấm vào đây</a> để kích hoạt tài khoản.");
-
             await SetSpamBlockAsync(cacheKey);
-            return user.Id;
         }
 
         private async Task SetSpamBlockAsync(string key)
@@ -124,6 +134,23 @@ namespace Identity.Infrastructure.Services
                 throw new ValidationException("Thông tin đăng nhập không chính xác.");
             }
 
+            if (!user.EmailConfirmed)
+            {
+                string cacheKey = $"spam_block:{email.ToLower()}";
+                string? isBlocked = await _cache.GetStringAsync(cacheKey);
+
+                if (!string.IsNullOrEmpty(isBlocked))
+                {
+                    throw new DomainException($"Email {email} đã đăng ký quá nhiều lần. Vui lòng quay lại sau 24 giờ.");
+                }
+
+                await SendTokenVerifyEmail(user, email, cacheKey);
+
+                throw new DomainException(
+                    $"Email {email} đã được đăng ký nhưng chưa xác nhận. " +
+                    $"Hệ thống vừa gửi lại email kích hoạt mới. Vui lòng kiểm tra.");
+            }
+
             var accessToken = await _tokenProvider.GenerateAccessToken(user);
             var refreshTokenString = _tokenProvider.GenerateRefreshToken();
 
@@ -145,23 +172,23 @@ namespace Identity.Infrastructure.Services
 
             if (existingToken == null)
             {
-                throw new ValidationException("Refresh Token không tồn tại.");
+                throw new ("Refresh Token không tồn tại.");
             }
 
             if (existingToken.IsRevoked)
             {
-                throw new ValidationException("Token đã bị thu hồi và không thể sử dụng.");
+                throw new UnauthorizedAccessException("Token đã bị thu hồi và không thể sử dụng.");
             }
 
             if (existingToken.ExpiryDate < DateTime.UtcNow)
             {
-                throw new ValidationException("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+                throw new UnauthorizedAccessException("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
             }
 
             var user = await _userManager.FindByIdAsync(existingToken.UserId.ToString());
             if (user == null)
             {
-                throw new ValidationException("Người dùng không tồn tại.");
+                throw new DomainException("Người dùng không tồn tại.");
             }
 
             existingToken.Revoke();
@@ -173,7 +200,7 @@ namespace Identity.Infrastructure.Services
             var newRefreshTokenEntity = new RefreshToken(
                 userId: user.Id,
                 token: newRefreshTokenString,
-                expiryDate: DateTime.UtcNow.AddDays(7) 
+                expiryDate: DateTime.UtcNow.AddDays(7)
             );
 
             await _dbContext.RefreshTokens.AddAsync(newRefreshTokenEntity);
@@ -196,17 +223,53 @@ namespace Identity.Infrastructure.Services
             _dbContext.RefreshTokens.Update(refreshToken);
         }
 
-        public async Task<string> ForgotPasswordAsync(string email)
+        public async Task ForgotPasswordAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
-
             if (user == null)
             {
-                throw new ValidationException("Email không tồn tại trong hệ thống.");
+                throw new DomainException("Email không tồn tại trong hệ thống.");
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                string cacheVerifyKey = $"spam_block:{email.ToLower()}";
+                string? isBlocked = await _cache.GetStringAsync(cacheVerifyKey);
+
+                if (!string.IsNullOrEmpty(isBlocked))
+                {
+                    throw new DomainException($"Email {email} đã đăng ký quá nhiều lần. Vui lòng quay lại sau 24 giờ.");
+                }
+
+                await SendTokenVerifyEmail(user, email, cacheVerifyKey);
+
+                throw new DomainException(
+                    $"Email {email} đã được đăng ký nhưng chưa xác nhận. " +
+                    $"Hệ thống vừa gửi lại email kích hoạt mới. Vui lòng kiểm tra.");
+            }
+
+            string cacheKey = $"forgot_pass_cooldown:{email.ToLower()}";
+            string? isCooldown = await _cache.GetStringAsync(cacheKey);
+
+            if (!string.IsNullOrEmpty(isCooldown))
+            {
+                throw new DomainException("Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra email hoặc thử lại sau 24 giờ.");
             }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return token;
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            // Coi lại đoạn này
+            string frontendUrl = "https://sury.store";
+            string resetLink = $"{frontendUrl}/auth/reset-password?email={email}&token={encodedToken}";
+
+            await _emailSender.SendEmailAsync(email, "Đặt lại mật khẩu",
+                $"Bạn vừa yêu cầu đặt lại mật khẩu. Vui lòng <a href='{HtmlEncoder.Default.Encode(resetLink)}'>bấm vào đây</a> để đặt mật khẩu mới.<br/>Link chỉ có hiệu lực trong 5 phút.");
+
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            };
+            await _cache.SetStringAsync(cacheKey, "1", options);
         }
 
         public async Task ResetPasswordAsync(string email, string token, string newPassword)
@@ -215,17 +278,26 @@ namespace Identity.Infrastructure.Services
 
             if (user == null)
             {
-                throw new ValidationException("Email không tồn tại.");
+                throw new DomainException("Email không tồn tại.");
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-
-            if (!result.Succeeded)
+            try
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new ValidationException($"Đặt lại mật khẩu thất bại: {errors}");
+                var decodedBytes = WebEncoders.Base64UrlDecode(token);
+                var decodedToken = Encoding.UTF8.GetString(decodedBytes);
+
+                var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
+
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    throw new DomainException($"Đặt lại mật khẩu thất bại: {errors}");
+                }
+            }
+            catch (FormatException)
+            {
+                throw new DomainException("Token xác thực bị lỗi hoặc không đúng định dạng.");
             }
         }
-
     }
 }

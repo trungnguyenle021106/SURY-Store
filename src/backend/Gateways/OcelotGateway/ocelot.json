@@ -142,6 +142,6 @@
   ],
   "GlobalConfiguration": {
     // Đây là URL mà client sẽ gọi vào Gateway. 
-    "BaseUrl": "https://sury.store"
+    "BaseUrl": "URL DOMAIN WEBSITE"
   }
 }

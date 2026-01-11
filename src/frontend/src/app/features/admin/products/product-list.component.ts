@@ -110,26 +110,46 @@ export class ProductListComponent implements OnInit {
   }
 
   // 2. Load Products
-  loadProducts(event?: any) {
+ loadProducts(event?: any, isForceRefresh: boolean = false) {
     this.isLoading = true;
     if (event) {
       this.currentPage = (event.first / event.rows) + 1;
       this.pageSize = event.rows;
     }
 
-    // Truyền thêm param categoryId nếu có chọn lọc
-    this.productService.getProducts(this.currentPage, this.pageSize, this.keyword, this.selectedCategoryId || undefined, undefined, true)
+    // Gọi Service: Truyền thêm tham số thứ 7 là isForceRefresh
+    this.productService.getProducts(
+        this.currentPage, 
+        this.pageSize, 
+        this.keyword, 
+        this.selectedCategoryId || undefined, 
+        undefined, 
+        true,          // includeDrafts (Admin luôn cần xem nháp)
+        isForceRefresh // <--- Tham số bypassCache mới
+    )
       .subscribe({
         next: (res: any) => {
           this.products = res.products.data;
           this.totalRecords = res.products.count;
           this.isLoading = false;
+
+          // Nếu là force refresh thì hiển thị thông báo cho admin biết
+          if (isForceRefresh) {
+             this.messageService.add({ severity: 'success', summary: 'Đã làm mới', detail: 'Dữ liệu đã được cập nhật trực tiếp từ Database' });
+          }
         },
         error: () => {
           this.isLoading = false;
           this.products = [];
+          this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải dữ liệu' });
         }
       });
+  }
+
+  // 2. THÊM HÀM refreshData (Gắn vào nút bấm)
+  refreshData() {
+    // Gọi loadProducts với tham số true để ép bỏ qua cache
+    this.loadProducts(null, true);
   }
 
   // Helper: Lấy tên danh mục từ ID

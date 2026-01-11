@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Identity.Application.CQRS.Auth.Commands.ForgotPassword
 {
-    public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, ForgotPasswordResult>
+    public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Unit>
     {
         private readonly IIdentityService _identityService;
 
@@ -12,10 +12,10 @@ namespace Identity.Application.CQRS.Auth.Commands.ForgotPassword
             _identityService = identityService;
         }
 
-        public async Task<ForgotPasswordResult> Handle(ForgotPasswordCommand command, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ForgotPasswordCommand command, CancellationToken cancellationToken)
         {
-            var token = await _identityService.ForgotPasswordAsync(command.Email);
-            return new ForgotPasswordResult(token);
+            await _identityService.ForgotPasswordAsync(command.Email);
+            return Unit.Value;
         }
     }
 }

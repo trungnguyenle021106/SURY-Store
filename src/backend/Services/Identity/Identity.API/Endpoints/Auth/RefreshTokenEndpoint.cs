@@ -36,14 +36,6 @@ namespace Identity.API.Endpoints.Auth
                     Expires = DateTime.UtcNow.AddMinutes(15)
                 });
 
-                context.Response.Cookies.Append("refresh_token", result.RefreshToken, new CookieOptions
-                {
-                    HttpOnly = baseCookieOptions.HttpOnly,
-                    Secure = baseCookieOptions.Secure,
-                    SameSite = baseCookieOptions.SameSite,
-                    Expires = DateTime.UtcNow.AddDays(7)
-                });
-
                 return Results.Ok();
             })
             .WithName("RefreshToken")

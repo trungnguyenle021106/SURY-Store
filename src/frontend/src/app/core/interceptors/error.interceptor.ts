@@ -15,16 +15,24 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      
+
+      const currentUrl = router.url; // Lấy URL hiện tại trên thanh địa chỉ
+
+      // Kiểm tra xem URL có chứa reset-password hay forgot-password không
+      if (currentUrl.includes('/auth/reset-password') || currentUrl.includes('/auth/forgot-password')) {
+        // Nếu đúng, ném lỗi ra cho Component tự xử lý, INTERCEPTOR DỪNG TẠI ĐÂY.
+        return throwError(() => error);
+      }
+
       // Xử lý khi gặp lỗi 401 (Unauthorized)
       if (error.status === 401) {
-        
+
         // Trường hợp 1: Nếu chính cái request 'refresh-token' hoặc 'login' bị lỗi 401
         // Nghĩa là hết thuốc chữa -> Logout và về trang login ngay.
-        if (req.url.includes('auth/refresh-token') || req.url.includes('auth/login')) {
-           authService.currentUser.set(null);
-           router.navigate(['/auth/login']);
-           return throwError(() => error);
+        if (req.url.includes('auth/refresh-token') || req.url.includes('auth/login') || req.url.includes('auth/info')) {
+          authService.currentUser.set(null);
+          //  router.navigate(['/auth/login']);
+          return throwError(() => error);
         }
 
         // Trường hợp 2: Các request bình thường bị 401 -> Thử Refresh Token
@@ -36,7 +44,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             switchMap(() => {
               isRefreshing = false;
               refreshTokenSubject.next(true); // Mở khóa
-              
+
               // Refresh thành công! Browser đã tự cập nhật Cookie mới.
               // Ta chỉ cần gọi lại request ban đầu (req).
               return next(req);

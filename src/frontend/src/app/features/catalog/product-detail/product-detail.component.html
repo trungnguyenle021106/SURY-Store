@@ -73,17 +73,22 @@
     <div class="mt-16 border-t border-gray-100 pt-10">
         <h2 class="text-xl font-bold text-gray-900">Sản phẩm khác</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
             <div *ngFor="let item of relatedProducts" class="group cursor-pointer" [routerLink]="['/catalog', item.id]">
                 <div class="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
                     <img [src]="item.imageUrl"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                    <span *ngIf="item.quantity < 5 && item.quantity > 0"
-                        class="absolute bottom-2 left-2 bg-yellow-400 text-white text-[10px] px-2 py-0.5 rounded font-bold">Sắp
-                        hết</span>
+
+                    <div class="absolute bottom-2 left-2" *ngIf="item.quantity < 5">
+                        <p-tag [value]="getProductStatus(item).label" [severity]="getProductStatus(item).severity"
+                            [rounded]="true" styleClass="text-[10px] px-2 py-0.5">
+                        </p-tag>
+                    </div>
                 </div>
                 <h3 class="font-medium text-gray-800 text-sm truncate group-hover:text-pink-600">{{ item.name }}</h3>
                 <span class="text-sm font-bold text-gray-900">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</span>
             </div>
+
         </div>
     </div>
 </div>

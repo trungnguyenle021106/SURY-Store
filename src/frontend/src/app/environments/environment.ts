@@ -4,7 +4,7 @@ const ENV_TYPE = 'CLOUD'; // Thay đổi thành: 'LOCAL', 'DOCKER', hoặc 'CLOU
 const configs = {
   LOCAL: 'http://localhost:5000/api',
   DOCKER: 'http://host.docker.internal:5000/api', // Dùng host.docker.internal để gọi từ container ra máy host
-  CLOUD: 'https://sury.store/api'
+  CLOUD: 'URL Cloud Server i'
 };
 
 export const environment = {

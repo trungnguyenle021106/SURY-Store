@@ -1,11 +1,28 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { adminGuard } from './core/guards/admin.guard';
-import { authGuard } from './core/guards/auth.guard';
-
 
 export const routes: Routes = [
-  // 1. LAYOUT KHÁCH HÀNG (Có Header/Footer hồng)
+  // ===========================================
+  // 1. CÁC ROUTE CỤ THỂ (Ưu tiên kiểm tra trước)
+  // ===========================================
+  
+  // Layout Auth (Login/Register/Reset) -> ĐƯA LÊN ĐẦU
+  {
+    path: 'auth',
+    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+  },
+
+  // Layout Admin -> ĐƯA LÊN ĐẦU
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
+    canActivate: [adminGuard]
+  },
+
+  // ===========================================
+  // 2. LAYOUT CHUNG (Hứng tất cả các trường hợp còn lại)
+  // ===========================================
   {
     path: '',
     component: MainLayoutComponent,
@@ -15,31 +32,17 @@ export const routes: Routes = [
       { path: 'basket', loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) },
       {
         path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
-        canActivate: [authGuard]
+        canActivate: [] // Nhớ check lại authGuard
       },
       { path: 'order-success', loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent) },
       {
         path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES),
-        canActivate: [authGuard]
+        canActivate: [] 
       },
     ]
   },
 
-  // 2. LAYOUT AUTH (Login/Register - Không có Header/Footer)
-  {
-    path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
-  },
-
-  // 3. LAYOUT ADMIN (Giao diện riêng - Sidebar đen)
-  // LƯU Ý: Phải nằm NGANG HÀNG với MainLayoutComponent ở trên, KHÔNG được nằm trong children của nó.
-  {
-    path: 'admin',
-    loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
-    canActivate: [adminGuard]
-  },
-
-  // 4. TRANG 404 (Luôn nằm cuối cùng)
+  // 3. 404 Not Found (Luôn nằm đáy)
   {
     path: '**',
     loadComponent: () => import('./core/layout/not-found/not-found.component').then(m => m.NotFoundComponent)

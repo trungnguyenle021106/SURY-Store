@@ -1,6 +1,7 @@
 ﻿using BuildingBlocks.Application.MediatR.CQRS;
 using Carter;
 using Catalog.Application.CQRS.Products.Queries.GetProduct;
+using Catalog.Application.CQRS.Products.Queries.GetProduct.Catalog.Application.CQRS.Products.Queries.GetProduct;
 using Catalog.Domain.Enums;
 using Mapster;
 using MediatR;
@@ -30,7 +31,8 @@ namespace Catalog.API.Endpoints.Products
                 [FromQuery] string? keyword,
                 [FromQuery] Guid? categoryId,
                 [FromQuery] Guid? excludeId,
-                [FromQuery] bool? includeDrafts, // <--- 1. Thêm tham số này (mặc định null/false)
+                [FromQuery] bool? includeDrafts,
+                [FromQuery] bool? bypassCache, // <--- 2. Nhận từ Query String
                 ISender sender) =>
             {
                 var query = new GetProductsQuery(
@@ -39,18 +41,14 @@ namespace Catalog.API.Endpoints.Products
                     keyword,
                     categoryId,
                     excludeId,
-                    includeDrafts ?? false // <--- 2. Truyền vào Query
+                    includeDrafts ?? false,
+                    bypassCache ?? false // <--- 3. Truyền vào Query
                 );
 
                 var result = await sender.Send(query);
-
                 var response = result.Adapt<GetProductsResponse>();
-
                 return Results.Ok(response);
-            })
-            .WithName("GetProducts")
-            .WithSummary("Get paginated products with search and filter")
-            .WithDescription("Get products list with pagination, search, category filter, exclusion support and draft inclusion option");
+            });
         }
     }
 }
