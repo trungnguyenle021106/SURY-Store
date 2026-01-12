@@ -62,7 +62,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
-
+builder.Services.AddHostedService<TokenCleanupService>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {

@@ -29,7 +29,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
         // Trường hợp 1: Nếu chính cái request 'refresh-token' hoặc 'login' bị lỗi 401
         // Nghĩa là hết thuốc chữa -> Logout và về trang login ngay.
-        if (req.url.includes('auth/refresh-token') || req.url.includes('auth/login') || req.url.includes('auth/info')) {
+        if (req.url.includes('auth/refresh-token') || req.url.includes('auth/login')) {
           authService.currentUser.set(null);
           //  router.navigate(['/auth/login']);
           return throwError(() => error);

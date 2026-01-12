@@ -52,70 +52,60 @@
   </div>
 </section>
 
-<section class="py-16 bg-white">
-  <div class="container mx-auto px-4">
+<section class="py-16 bg-white" id="new-products-section"> <div class="container mx-auto px-4">
     <div class="flex justify-between items-end mb-8">
       <div>
         <h2 class="text-3xl font-bold text-gray-800">Sản phẩm mới</h2>
         <p class="text-gray-500 mt-1 font-light">Dành riêng cho bạn</p>
       </div>
-      <a routerLink="/catalog" class="text-pink-600 font-medium hover:underline text-sm hidden sm:block">Xem tất cả
-        &rarr;</a>
+      <a routerLink="/catalog" class="text-pink-600 font-medium hover:underline text-sm hidden sm:block">
+        Xem toàn bộ kho &rarr;
+      </a>
     </div>
 
     <div *ngIf="isLoadingProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <div *ngFor="let i of [1,2,3,4]" class="bg-white p-4 rounded-2xl shadow-sm">
+       <div *ngFor="let i of [1,2,3,4]" class="bg-white p-4 rounded-2xl shadow-sm">
         <p-skeleton height="350px" styleClass="mb-4 rounded-xl"></p-skeleton>
         <p-skeleton width="60%" styleClass="mb-2"></p-skeleton>
         <p-skeleton width="40%"></p-skeleton>
       </div>
     </div>
 
-    <div *ngIf="!isLoadingProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-      <div *ngFor="let product of featuredProducts"
+    <div *ngIf="!isLoadingProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+       <div *ngFor="let product of featuredProducts"
         class="product-card group bg-white rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden border border-gray-100">
-
-        <div class="relative aspect-[2/3] bg-gray-50 overflow-hidden cursor-pointer"
-          [routerLink]="['/catalog', product.id]">
-          <img [src]="product.imageUrl" [alt]="product.name"
-            class="product-image w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-
-          <div class="absolute top-3 left-3 flex flex-col gap-2">
-            <p-tag [value]="getInventoryStatus(product).label" [severity]="getInventoryStatus(product).severity"
-              [rounded]="true"></p-tag>
+          <div class="relative aspect-[2/3] bg-gray-50 overflow-hidden cursor-pointer" [routerLink]="['/catalog', product.id]">
+            <img [src]="product.imageUrl" [alt]="product.name" class="product-image w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+            <div class="absolute top-3 left-3 flex flex-col gap-2">
+              <p-tag [value]="getInventoryStatus(product).label" [severity]="getInventoryStatus(product).severity" [rounded]="true"></p-tag>
+            </div>
+            <div class="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4">
+              <button pButton icon="pi pi-search" class="p-button-rounded shadow-lg w-full" style="background-color: white; color: black; border: none;" label="Xem chi tiết"></button>
+            </div>
           </div>
-
-          <div
-            class="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4">
-            <button pButton icon="pi pi-search" class="p-button-rounded shadow-lg w-full"
-              style="background-color: white; color: black; border: none;" label="Xem chi tiết"></button>
+          <div class="p-4 flex-grow flex flex-col">
+            <h3 class="text-gray-800 font-medium text-lg leading-snug mb-1 hover:text-pink-600 cursor-pointer line-clamp-2" [routerLink]="['/catalog', product.id]" [pTooltip]="product.name">
+              {{ product.name }}
+            </h3>
+            <p class="text-gray-400 text-sm mb-3 line-clamp-1">{{product.description}}</p>
+            <div class="mt-auto pt-2 flex items-center justify-between border-t border-gray-50">
+              <span class="text-xl font-bold text-gray-900">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
+              <button pButton icon="pi pi-shopping-cart" [text]="true" severity="danger" rounded="true" (click)="addToCart(product)"></button>
+            </div>
           </div>
-        </div>
-
-        <div class="p-4 flex-grow flex flex-col">
-          <h3
-            class="text-gray-800 font-medium text-lg leading-snug mb-1 hover:text-pink-600 cursor-pointer line-clamp-2"
-            [routerLink]="['/catalog', product.id]" [pTooltip]="product.name">
-            {{ product.name }}
-          </h3>
-          <p class="text-gray-400 text-sm mb-3 line-clamp-1">{{product.description}}</p>
-
-          <div class="mt-auto pt-2 flex items-center justify-between border-t border-gray-50">
-            <span class="text-xl font-bold text-gray-900">
-              {{ product.price | currency:'VND':'symbol':'1.0-0' }}
-            </span>
-            <button pButton icon="pi pi-shopping-cart" [text]="true" severity="danger" rounded="true"
-              (click)="addToCart(product)"></button>
-          </div>
-        </div>
       </div>
-
     </div>
 
-    <div class="text-center mt-12 sm:hidden">
-      <p-button label="Xem tất cả" icon="pi pi-arrow-right" iconPos="right" [outlined]="true" routerLink="/catalog"
-        rounded="true" styleClass="w-full"></p-button>
+    <div class="flex justify-center mt-8">
+        <p-paginator 
+            (onPageChange)="onPageChange($event)" 
+            [first]="first" 
+            [rows]="rows" 
+            [totalRecords]="totalRecords" 
+            [showCurrentPageReport]="false"
+            styleClass="bg-transparent border-none text-pink-600">
+        </p-paginator>
     </div>
+    
   </div>
 </section>

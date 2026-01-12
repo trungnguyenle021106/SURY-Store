@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   // ===========================================
@@ -32,12 +33,12 @@ export const routes: Routes = [
       { path: 'basket', loadComponent: () => import('./features/basket/basket.component').then(m => m.BasketComponent) },
       {
         path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
-        canActivate: [] // Nhớ check lại authGuard
+        canActivate: [authGuard] // Nhớ check lại authGuard
       },
       { path: 'order-success', loadComponent: () => import('./features/order-success/order-success.component').then(m => m.OrderSuccessComponent) },
       {
         path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES),
-        canActivate: [] 
+        canActivate: [authGuard] 
       },
     ]
   },

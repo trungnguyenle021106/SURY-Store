@@ -1,16 +1,20 @@
 ﻿using BuildingBlocks.Core.Exceptions;
 using Catalog.Application.Common.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Catalog.Application.CQRS.Products.Commands.UpdateProduct
 {
     public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, UpdateProductResult>
     {
         private readonly ICatalogDbContext _dbContext;
+        private readonly IDistributedCache _cache; // Inject Cache
+        private const string ProductMasterKey = "product-master-key";
 
-        public UpdateProductHandler(ICatalogDbContext dbContext)
+        public UpdateProductHandler(ICatalogDbContext dbContext, IDistributedCache cache)
         {
             _dbContext = dbContext;
+            _cache = cache;
         }
 
         public async Task<UpdateProductResult> Handle(UpdateProductCommand command, CancellationToken cancellationToken)
@@ -29,7 +33,11 @@ namespace Catalog.Application.CQRS.Products.Commands.UpdateProduct
                 command.ImageUrl,
                 command.CategoryId
             );
+
             _dbContext.Products.Update(product);
+
+            // Xóa Cache Master Key
+            await _cache.RemoveAsync(ProductMasterKey, cancellationToken);
 
             return new UpdateProductResult(true);
         }
