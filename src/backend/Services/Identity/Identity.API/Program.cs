@@ -54,7 +54,7 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
-builder.Services.AddCustomCors(builder.Configuration); // Khi nào nhiều domain thì loại bỏ CORS này
+//builder.Services.AddCustomCors(builder.Configuration); // Khi nào nhiều domain thì loại bỏ CORS này
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
@@ -89,7 +89,7 @@ if (app.Environment.IsDevelopment())
     app.UseCustomSwagger();
 }
 
-app.UseCors(CorsExtensions.AllowAllPolicy);
+//app.UseCors(CorsExtensions.AllowAllPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

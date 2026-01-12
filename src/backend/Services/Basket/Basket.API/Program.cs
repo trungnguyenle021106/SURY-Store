@@ -16,7 +16,7 @@ builder.Services.AddCustomSwagger(builder.Configuration);
 builder.Services.AddCustomExceptionHandler();
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
 builder.Services.AddCustomMassTransitWithRabbitMq(builder.Configuration);
-builder.Services.AddCustomCors(builder.Configuration);
+//builder.Services.AddCustomCors(builder.Configuration);
 builder.Services.AddCustomAuthorization();
 
 builder.Services.AddCarter();
@@ -30,7 +30,7 @@ if (app.Environment.IsDevelopment())
     app.UseCustomSwagger();
 }
 
-app.UseCors(CorsExtensions.AllowAllPolicy);
+//app.UseCors(CorsExtensions.AllowAllPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
