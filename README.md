@@ -8,7 +8,7 @@ A comprehensive e-commerce platform designed for a family fashion business, buil
 ## 🏗 System Architecture
 The system is built following the **Clean Architecture** principles and distributed into independent services:
 
-* [cite_start]**API Gateway**: **Ocelot** serves as the single entry point, managing routing, centralized security, and CORS policies[cite: 34, 82].
+* **API Gateway**: **Ocelot** serves as the single entry point, managing routing, centralized security, and CORS policies.
 * **Microservices**: 
     * **Identity Service**: Handles authentication, user profiles, and address management.
     * **Catalog Service**: Manages products, categories, and inventory.
@@ -23,13 +23,13 @@ The system is built following the **Clean Architecture** principles and distribu
 ---
 
 ## 🛠 Tech Stack
-* [cite_start]**Backend**: .NET 8, Entity Framework Core[cite: 10, 57].
-* [cite_start]**Database**: MSSQL (Primary), Redis (Caching)[cite: 10, 57].
+* **Backend**: .NET 8, Entity Framework Core.
+* **Database**: MSSQL (Primary), Redis (Caching).
 * **Messaging**: RabbitMQ, MassTransit.
 * **Cloud Infrastructure**: 
-    * [cite_start]**AWS S3**: Secure media storage[cite: 10, 57].
-    * **AWS CloudFront**: CDN for global asset delivery and low-latency image caching.
-* [cite_start]**DevOps**: Docker orchestration for environment consistency[cite: 10, 57].
+    * **AWS S3**: Secure media storage.
+    * **AWS CloudFront**: For global asset delivery and low-latency image caching.
+* **DevOps**: Docker orchestration for environment consistency.
 
 ---
 
@@ -37,7 +37,4 @@ The system is built following the **Clean Architecture** principles and distribu
 * **Secure Authentication**: Implemented **JWT with HttpOnly Cookies** to prevent XSS attacks; integrated automated **Email Verification** and password recovery flows.
 * **Performance Optimization**: Layered caching strategy with **Redis** to reduce database load and improve response times.
 * **System Resilience**: Robust handling of partial failures and distributed transactions to ensure data integrity across services.
-* [cite_start]**Data Consistency**: Synchronized DTOs and shared data structures across teams using Git Submodules[cite: 22, 70].
-
----
-
+* **Data Consistency**: Synchronized DTOs and shared data structures across services to ensure API contract consistency.
