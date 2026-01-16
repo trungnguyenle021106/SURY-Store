@@ -45,6 +45,19 @@
       "Priority": 10
     },
     {
+      "DownstreamPathTemplate": "/auth/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Priority": 10
+    },
+    {
       "DownstreamPathTemplate": "/auth/verify-email",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -119,6 +132,51 @@
       ],
       "UpstreamPathTemplate": "/categories/{everything}",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/categories/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/categories/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Priority": 11
     },
 
     // [PRIVATE] Sửa hàng
@@ -208,6 +266,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "URL WEB HOST"
+    "BaseUrl": "https://sury.store"
   }
 }
