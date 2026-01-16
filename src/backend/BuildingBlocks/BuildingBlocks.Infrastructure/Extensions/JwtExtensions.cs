@@ -32,7 +32,7 @@ namespace BuildingBlocks.Infrastructure.Extensions
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
-
+                options.RequireHttpsMetadata = false;
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>

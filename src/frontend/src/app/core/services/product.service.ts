@@ -10,19 +10,25 @@ export class ProductService {
     private http = inject(HttpClient);
     private baseUrl = `${environment.apiUrl}/products`;
 
-    getProducts(
+  getProducts(
         pageNumber: number = 1,
         pageSize: number = 10,
         keyword?: string,
         categoryId?: string,
         excludeId?: string,
-        includeDrafts: boolean = false // <--- THÊM THAM SỐ NÀY (Mặc định false)
+        includeDrafts: boolean = false,
+        bypassCache: boolean = false 
     ): Observable<ProductListResponse> {
 
         let params = new HttpParams()
             .set('pageNumber', pageNumber)
             .set('pageSize', pageSize)
-            .set('includeDrafts', includeDrafts); // <--- Luôn gửi lên BE
+            .set('includeDrafts', includeDrafts);
+
+        // 2. Logic xử lý Bypass Cache
+        if (bypassCache) {
+            params = params.set('bypassCache', 'true');
+        }
 
         if (keyword) {
             params = params.set('keyword', keyword);

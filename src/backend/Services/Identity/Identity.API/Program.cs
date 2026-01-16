@@ -4,6 +4,7 @@ using BuildingBlocks.Infrastructure.Extensions;
 using Carter;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Infrastructure.Common;
 using Identity.Infrastructure.Data;
 using Identity.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
@@ -41,17 +42,46 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
     options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<IdentityDbContext>()
 .AddDefaultTokenProviders();
 
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(24);
+});
+
 builder.Services.AddCustomJwtAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
-
-builder.Services.AddCustomCors(builder.Configuration);
-
+//builder.Services.AddCustomCors(builder.Configuration); // Khi nào nhiều domain thì loại bỏ CORS này
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "Identity_";
+});
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddHostedService<TokenCleanupService>();
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<IdentityDbContext>();
 
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra khi đang migrate database!");
+    }
+}
 app.UseCustomExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -59,7 +89,7 @@ if (app.Environment.IsDevelopment())
     app.UseCustomSwagger();
 }
 
-app.UseCors(CorsExtensions.AllowAllPolicy);
+//app.UseCors(CorsExtensions.AllowAllPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

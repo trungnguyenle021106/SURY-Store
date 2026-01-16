@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.API.Endpoints.Auth
 {
     public record ForgotPasswordRequest(string Email);
-    public record ForgotPasswordResponse(string VerifyToken);
+    public record ForgotPasswordResponse(string Message);
 
     public class ForgotPasswordEndpoint : ICarterModule
     {
@@ -17,15 +17,13 @@ namespace Identity.API.Endpoints.Auth
             {
                 var command = new ForgotPasswordCommand(request.Email);
 
-                var result = await sender.Send(command);
+                await sender.Send(command);
 
-                var response = result.Adapt<ForgotPasswordResponse>();
-
-                return Results.Ok(response);
+                return Results.Ok();
             })
             .WithName("ForgotPassword")
             .WithSummary("Request password reset")
-            .WithDescription("Generate a password reset token (Returned in response for Dev testing).");
+            .WithDescription("Sends a password reset link via email.");
         }
     }
 }

@@ -1,0 +1,17 @@
+# Bỏ qua các thư mục hệ thống/IDE
+.git/
+.gitignore
+.vs/
+.vscode/
+
+# Bỏ qua kết quả build cũ (Rất quan trọng)
+**/bin/
+**/obj/
+
+# Bỏ qua các file cấu hình Docker khi copy (để tránh loop)
+Dockerfile*
+docker-compose*
+
+# Bỏ qua các file môi trường nhạy cảm
+**/.env
+**/secrets.*

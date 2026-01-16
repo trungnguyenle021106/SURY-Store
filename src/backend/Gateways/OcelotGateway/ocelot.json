@@ -1,148 +1,271 @@
 ﻿{
   "Routes": [
     // =================================================================================
-    // 1. IDENTITY SERVICE (Port 5003)
-    // Bao gồm: /auth, /users (addresses), /commons
+    // 1. IDENTITY SERVICE
     // =================================================================================
+
+    // [PUBLIC] Các API không cần Token (Ưu tiên cao nhất)
     {
-      "DownstreamPathTemplate": "/auth/{everything}",
+      "DownstreamPathTemplate": "/auth/login",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET" ]
+      "UpstreamPathTemplate": "/auth/login",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/auth/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/register",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/auth/refresh-token", // <--- MỚI THÊM
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/refresh-token",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/auth/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/auth/verify-email",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/verify-email",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 10
+    },
+
+    // [PRIVATE] Các API Identity CẦN Token
+    {
+      "DownstreamPathTemplate": "/auth/info",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/info",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Priority": 5
     },
     {
       "DownstreamPathTemplate": "/users/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-    },
-
-    {
-      "DownstreamPathTemplate": "/commons/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5003
-        }
-      ],
-      "UpstreamPathTemplate": "/commons/{everything}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
 
     // =================================================================================
-    // 2. CATALOG SERVICE (Port 5002)
-    // Bao gồm: /categories, /products
+    // 2. CATALOG SERVICE
     // =================================================================================
-    {
-      "DownstreamPathTemplate": "/categories/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
-      "UpstreamPathTemplate": "/categories/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ]
-    },
+
+    // [PUBLIC] Xem hàng
     {
       "DownstreamPathTemplate": "/products/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "catalog-api",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/products/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ]
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/categories/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/categories/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Priority": 10
+    },
+    {
+      "DownstreamPathTemplate": "/categories/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/categories/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Priority": 11
+    },
+
+    // [PRIVATE] Sửa hàng
+    {
+      "DownstreamPathTemplate": "/products/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/products/{everything}",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
 
     // =================================================================================
-    // 3. BASKET SERVICE (Port 5001)
-    // Bao gồm: /basket
-    // Lưu ý: Route này bao gồm cả DELETE /basket, POST /basket/checkout
+    // 3. BASKET SERVICE (PRIVATE)
     // =================================================================================
     {
       "DownstreamPathTemplate": "/basket/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5001
+          "Host": "basket-api",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/basket/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "DELETE" ]
-    },
-    {
-      "DownstreamPathTemplate": "/basket",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5001
-        }
-      ],
-      "UpstreamPathTemplate": "/basket",
-      "UpstreamHttpMethod": [ "GET", "POST", "DELETE" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
 
     // =================================================================================
-    // 4. ORDERING SERVICE (Port 5004)
-    // Bao gồm: /orders, /admin/orders
+    // 4. ORDERING SERVICE (PRIVATE)
     // =================================================================================
     {
       "DownstreamPathTemplate": "/orders/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5004
+          "Host": "ordering-api",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/orders/{everything}",
-      "UpstreamHttpMethod": [ "GET", "PATCH" ]
+      "UpstreamHttpMethod": [ "GET", "PATCH" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "DownstreamPathTemplate": "/admin/orders/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5004
+          "Host": "ordering-api",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/admin/orders/{everything}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
+
+    // =================================================================================
+    // 5. COMMONS (PUBLIC)
+    // =================================================================================
     {
-      "DownstreamPathTemplate": "/admin/orders",
+      "DownstreamPathTemplate": "/commons/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5004
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/admin/orders",
+      "UpstreamPathTemplate": "/commons/{everything}",
       "UpstreamHttpMethod": [ "GET" ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000" 
+    "BaseUrl": "https://sury.store"
   }
 }

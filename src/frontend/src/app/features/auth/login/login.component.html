@@ -8,13 +8,19 @@
       </a>
     </div>
 
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">
-        TINI<span class="text-pink-600">.</span>
+    <div class="text-center mb-6"> <h1 class="text-3xl font-bold text-gray-900 tracking-tighter">
+        SURY<span class="text-pink-600">.</span>
       </h1>
       <p class="text-gray-500 mt-2">Chào mừng bạn quay trở lại!</p>
     </div>
 
+    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+      <i class="pi pi-exclamation-circle text-orange-500 mt-0.5 text-lg"></i>
+      <div class="text-sm text-gray-700">
+        <span class="font-bold text-orange-700 block mb-0.5">Thông báo</span>
+        Chức năng mua hàng hiện chỉ mang tính chất thử nghiệm. Quý khách vui lòng <span class="font-medium text-orange-700">mua trực tiếp tại cửa hàng</span>.
+      </div>
+    </div>
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
       
       <div class="flex flex-col gap-2">
@@ -35,8 +41,7 @@
 
       <div class="flex justify-between items-center text-sm">
         <div class="flex items-center gap-2">
-          <!-- <p-checkbox [binary]="true" label="Ghi nhớ" inputId="remember"></p-checkbox> -->
-        </div>
+          </div>
         <a routerLink="/auth/forgot-password" class="text-pink-600 font-medium hover:underline">Quên mật khẩu?</a>
       </div>
 

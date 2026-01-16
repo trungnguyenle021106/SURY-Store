@@ -52,7 +52,7 @@ export class ProfileInfoComponent implements OnInit {
     this.isLoading = true;
     this.userService.getMe().subscribe({
       next: (profile) => {
-        console.log('User Profile:', profile);
+        // console.log('User Profile:', profile);
         // 1. Hiển thị email (readonly)
         this.emailDisplay = profile.email;
         this.currentAvatarUrl = profile.avatarUrl;
