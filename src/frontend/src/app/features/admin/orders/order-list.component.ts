@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// PrimeNG
+// PrimeNG Imports (Giữ nguyên)
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -14,10 +14,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 
-// Services & Models
 import { OrderService } from '../../../core/services/order.service';
 import { OrderDetail, OrderSummary, OrderStatus } from '../../../core/models/ordering.models';
-// Nhớ import parseOrderStatus
 import { OrderStatusLabel, OrderStatusSeverity, parseOrderStatus } from '../../../shared/utils/order-status.util';
 
 @Component({
@@ -39,10 +37,13 @@ export class OrderListComponent implements OnInit {
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
 
-  // Data List
+  // Data
   orders: OrderSummary[] = [];
   totalRecords = 0;
   isLoading = false;
+  
+  // Infinite Scroll State
+  isLastPage = false; // Kiểm tra đã hết dữ liệu chưa
 
   // Pagination & Filter
   currentPage = 1;
@@ -63,19 +64,29 @@ export class OrderListComponent implements OnInit {
 
   // Utils
   OrderStatus = OrderStatus;
-  
-  // Dùng parseOrderStatus để hiển thị đúng Label/Màu dù BE trả về chuỗi hay số
   getStatusLabel = (s: any) => OrderStatusLabel[parseOrderStatus(s)];
   getStatusSeverity = (s: any) => OrderStatusSeverity[parseOrderStatus(s)];
+  getShortId(id: string | undefined | null): string {
+    if (!id) return '---';
+    return String(id).substring(0, 8).toUpperCase();
+  }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Tải dữ liệu lần đầu
+    this.loadOrders();
+  }
 
-  // 1. Load danh sách
-  loadOrders(event?: any) {
+  // --- 1. CORE: Load Orders (Đã sửa cho Infinite Scroll) ---
+  loadOrders(event?: any, isAppend: boolean = false) {
+    if (this.isLoading) return; // Chặn spam request
+    
     this.isLoading = true;
-    if (event) {
-      this.currentPage = (event.first / event.rows) + 1;
-      this.pageSize = event.rows;
+
+    // Nếu không phải là "Nối thêm" (tức là Search, Filter, hoặc Refresh) -> Reset về trang 1
+    if (!isAppend) {
+        this.currentPage = 1;
+        this.orders = [];
+        this.isLastPage = false;
     }
 
     this.orderService.getOrdersForAdmin(
@@ -85,19 +96,50 @@ export class OrderListComponent implements OnInit {
       this.searchTerm
     ).subscribe({
       next: (res) => {
-        this.orders = res.data;
+        const newOrders = res.data;
         this.totalRecords = res.count;
+
+        // Logic nối mảng
+        if (isAppend) {
+            this.orders = [...this.orders, ...newOrders];
+        } else {
+            this.orders = newOrders;
+        }
+
+        // Kiểm tra xem đã hết dữ liệu chưa
+        if (newOrders.length === 0 || this.orders.length >= this.totalRecords) {
+            this.isLastPage = true;
+        }
+
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
-        this.orders = [];
+        // Nếu load lần đầu lỗi thì xóa mảng, còn load thêm lỗi thì giữ nguyên
+        if (!isAppend) this.orders = []; 
         this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được danh sách đơn hàng' });
       }
     });
   }
 
-  // 2. Xem chi tiết (ĐÃ FIX LOGIC STATUS)
+  // --- 2. Sự kiện cuộn (Scroll Event) ---
+  onScroll(event: any) {
+    if (this.isLoading || this.isLastPage) return;
+
+    const element = event.target;
+    // Nếu cuộn gần tới đáy (còn 50px)
+    if (element.offsetHeight + element.scrollTop >= element.scrollHeight - 50) {
+       this.currentPage++;
+       this.loadOrders(null, true); // Gọi load với isAppend = true
+    }
+  }
+
+  // --- 3. Wrapper cho Search/Filter (Gọi reset) ---
+  onFilterChange() {
+      this.loadOrders(null, false);
+  }
+
+  // ... Các hàm viewOrder, changeStatus giữ nguyên logic cũ ...
   viewOrder(orderId: string) {
     this.displayDialog = true;
     this.isLoadingDetail = true;
@@ -105,91 +147,60 @@ export class OrderListComponent implements OnInit {
 
     this.orderService.getOrderById(orderId).subscribe({
       next: (res: any) => {
-        // Lấy object data (xử lý trường hợp BE bọc trong .order hoặc trả về trực tiếp)
         const rawData = res.order || res;
-        
-        // --- QUAN TRỌNG: Ép kiểu status về số (Number) ngay tại đây ---
-        // Để các điều kiện *ngIf trong HTML so sánh đúng với Enum
         this.selectedOrder = {
             ...rawData,
             status: parseOrderStatus(rawData.status) 
         };
-        
         this.isLoadingDetail = false;
       },
       error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được chi tiết đơn hàng' });
+        this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tải được chi tiết' });
         this.displayDialog = false;
         this.isLoadingDetail = false;
       }
     });
   }
 
-  // 3. Cập nhật trạng thái
   changeStatus(action: 'process' | 'ship' | 'complete' | 'cancel') {
     if (!this.selectedOrder) return;
     const id = this.selectedOrder.id;
-
-    let message = '';
-    let header = 'Xác nhận';
-    let apiCall;
+    let message = '', header = 'Xác nhận', apiCall;
 
     switch (action) {
-      case 'process':
-        message = 'Xác nhận đơn hàng và chuyển sang trạng thái Đang xử lý?';
-        apiCall = this.orderService.startProcessing(id);
-        break;
-      case 'ship':
-        message = 'Đơn hàng đã đóng gói xong và bàn giao cho Shipper?';
-        apiCall = this.orderService.shipOrder(id);
-        break;
-      case 'complete':
-        message = 'Khách đã nhận hàng và thanh toán thành công?';
-        apiCall = this.orderService.completeOrder(id);
-        break;
-      case 'cancel':
-        message = 'Bạn có chắc chắn muốn HỦY đơn hàng này?';
-        header = 'Hủy đơn hàng';
-        apiCall = this.orderService.cancelOrder(id);
-        break;
+      case 'process': message = 'Chuyển sang Đang xử lý?'; apiCall = this.orderService.startProcessing(id); break;
+      case 'ship': message = 'Đã bàn giao cho Shipper?'; apiCall = this.orderService.shipOrder(id); break;
+      case 'complete': message = 'Khách đã nhận và thanh toán?'; apiCall = this.orderService.completeOrder(id); break;
+      case 'cancel': message = 'HỦY đơn hàng này?'; header = 'Hủy đơn'; apiCall = this.orderService.cancelOrder(id); break;
       default: return;
     }
 
     this.confirmationService.confirm({
-      message: message,
-      header: header,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Đồng ý',
-      rejectLabel: 'Hủy',
+      message, header, icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Đồng ý', rejectLabel: 'Hủy',
       acceptButtonStyleClass: action === 'cancel' ? 'p-button-danger' : 'p-button-primary',
       accept: () => {
         apiCall.subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật trạng thái' });
             
-            // Cập nhật lại UI Dialog ngay lập tức để nút bấm thay đổi theo
+            // Cập nhật UI Dialog
             if (this.selectedOrder) {
-                // Tự động chuyển status client-side để UI update luôn không cần tắt dialog
                 if (action === 'process') this.selectedOrder.status = OrderStatus.Processing;
                 if (action === 'ship') this.selectedOrder.status = OrderStatus.Shipping;
                 if (action === 'complete') this.selectedOrder.status = OrderStatus.Completed;
                 if (action === 'cancel') this.selectedOrder.status = OrderStatus.Cancelled;
+                
+                // Cập nhật luôn trong danh sách bên ngoài để đỡ phải reload lại từ đầu (mất vị trí cuộn)
+                const itemIndex = this.orders.findIndex(o => o.id === id);
+                if (itemIndex !== -1) {
+                    this.orders[itemIndex].status = this.selectedOrder.status;
+                }
             }
-            
-            // Reload lại bảng danh sách nền
-            this.loadOrders(); 
           },
-          error: (err) => {
-            console.error(err);
-            this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể cập nhật trạng thái' });
-          }
+          error: () => this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể cập nhật' })
         });
       }
     });
-  }
-
-  getShortId(id: string | undefined | null): string {
-    if (!id) return '---';
-    return String(id).substring(0, 8).toUpperCase();
   }
 }

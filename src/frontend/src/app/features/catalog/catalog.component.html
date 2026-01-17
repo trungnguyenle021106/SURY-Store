@@ -9,11 +9,11 @@
         <h1 class="text-3xl font-bold text-gray-900">Tất cả sản phẩm</h1>
       </ng-template>
 
-      <p class="text-gray-500 mt-2 text-sm" *ngIf="!isLoadingProducts">
-        Tìm thấy <span class="font-medium text-pink-600">{{totalRecords}}</span> sản phẩm phù hợp.
+      <p class="text-gray-500 mt-2 text-sm" *ngIf="!isLoadingInit">
+        Tìm thấy <span class="font-medium text-pink-600">{{ allFilteredProducts.length }}</span> sản phẩm phù hợp.
       </p>
       
-      <p-skeleton width="200px" height="1rem" styleClass="mt-2" *ngIf="isLoadingProducts"></p-skeleton>
+      <p-skeleton width="200px" height="1rem" styleClass="mt-2" *ngIf="isLoadingInit"></p-skeleton>
     </div>
   </div>
 
@@ -39,7 +39,7 @@
 
               <ng-container *ngIf="!isLoadingCategories">
                 <div *ngFor="let cat of categories" class="field-checkbox flex items-center gap-2">
-                  <p-checkbox name="group1" [value]="cat.id" [(ngModel)]="selectedCategories" (onChange)="filterProducts()" [inputId]="cat.id"></p-checkbox>
+                  <p-checkbox name="group1" [value]="cat.id" [(ngModel)]="selectedCategories" (onChange)="applyFilters()" [inputId]="cat.id"></p-checkbox>
                   <label [for]="cat.id" class="text-gray-600 cursor-pointer hover:text-pink-600 text-sm select-none">{{ cat.name }}</label>
                 </div>
               </ng-container>
@@ -49,7 +49,7 @@
           <div>
             <h4 class="font-semibold text-sm text-gray-700 mb-4 uppercase tracking-wider">Khoảng giá</h4>
             <div class="px-2">
-              <p-slider [(ngModel)]="priceRange" [range]="true" [min]="0" [max]="1000000" [step]="50000" (onChange)="filterProducts()" styleClass="w-full"></p-slider>
+              <p-slider [(ngModel)]="priceRange" [range]="true" [min]="0" [max]="1000000" [step]="50000" (onChangeEnd)="applyFilters()" styleClass="w-full"></p-slider>
             </div>
             <div class="flex justify-between mt-4 text-xs text-gray-500 font-medium">
               <span>{{ priceRange[0] | currency:'VND':'symbol':'1.0-0' }}</span>
@@ -67,11 +67,11 @@
           <div class="hidden lg:block"></div>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500 hidden sm:inline">Sắp xếp:</span>
-            <p-dropdown [options]="sortOptions" [(ngModel)]="selectedSort" (onChange)="filterProducts()" optionLabel="label" optionValue="value" styleClass="text-sm min-w-[160px] border-none shadow-none bg-transparent font-medium text-gray-900"></p-dropdown>
+            <p-dropdown [options]="sortOptions" [(ngModel)]="selectedSort" (onChange)="applyFilters()" optionLabel="label" optionValue="value" styleClass="text-sm min-w-[160px] border-none shadow-none bg-transparent font-medium text-gray-900"></p-dropdown>
           </div>
         </div>
 
-        <div *ngIf="isLoadingProducts" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        <div *ngIf="isLoadingInit" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
            <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
              <div class="aspect-[3/4] bg-gray-50 relative p-1">
                 <p-skeleton width="100%" height="100%"></p-skeleton>
@@ -80,19 +80,16 @@
                 <p-skeleton width="30%" height="0.8rem"></p-skeleton> 
                 <p-skeleton width="100%" height="1.1rem"></p-skeleton> 
                 <p-skeleton width="60%" height="1.1rem"></p-skeleton>  
-                <div class="mt-auto pt-2 flex justify-between items-center">
-                   <p-skeleton width="50%" height="1.5rem"></p-skeleton> 
-                   <p-skeleton shape="circle" size="2rem"></p-skeleton> 
-                </div>
              </div>
            </div>
         </div>
 
-        <div *ngIf="!isLoadingProducts && products.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 animate-fade-in-up">
-          <div *ngFor="let product of products" class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col">
+        <div *ngIf="!isLoadingInit && displayProducts.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 animate-fade-in-up">
+          <div *ngFor="let product of displayProducts" class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col">
             
             <div class="relative aspect-[3/4] bg-gray-100 overflow-hidden cursor-pointer" [routerLink]="['/catalog', product.id]">
-              <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+              <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                   onerror="this.src='https://placehold.co/300x400?text=No+Image'">
               
               <div class="absolute top-2 left-2">
                 <p-tag [value]="getInventoryStatus(product).label" [severity]="getInventoryStatus(product).severity"></p-tag>
@@ -104,7 +101,7 @@
             </div>
 
             <div class="p-4 flex flex-col flex-grow">
-              <span class="text-xs text-gray-400 mb-1">Mã: {{product.id}}</span>
+              <span class="text-xs text-gray-400 mb-1">Mã: {{product.id | slice:0:6}}</span>
               <h3 class="font-medium text-gray-900 text-base leading-snug mb-2 hover:text-pink-600 cursor-pointer line-clamp-2" [routerLink]="['/catalog', product.id]">
                 {{ product.name }}
               </h3>
@@ -115,15 +112,24 @@
           </div>
         </div>
 
-        <div *ngIf="!isLoadingProducts && products.length === 0" class="text-center py-20">
+        <div *ngIf="!isLoadingInit && displayProducts.length === 0" class="text-center py-20">
           <i class="pi pi-search text-4xl text-gray-300 mb-4"></i>
           <p class="text-gray-500">Không tìm thấy sản phẩm nào phù hợp.</p>
           <button pButton label="Xóa bộ lọc" link="true" (click)="clearFilters()"></button>
         </div>
 
-        <div class="mt-8" *ngIf="totalRecords > 0 && !isLoadingProducts">
-          <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows" [totalRecords]="totalRecords" [rowsPerPageOptions]="[8, 12, 24]"></p-paginator>
+        <div *ngIf="isLoadingMore" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 mt-6">
+            <div *ngFor="let i of [1,2,3,4]" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                <div class="aspect-[3/4] bg-gray-50 relative p-1"><p-skeleton width="100%" height="100%"></p-skeleton></div>
+                <div class="p-4 flex flex-col gap-2"><p-skeleton width="100%" height="1rem"></p-skeleton></div>
+            </div>
         </div>
+
+        <div *ngIf="!isLoadingInit && !isLoadingMore && displayProducts.length > 0 && displayProducts.length >= allFilteredProducts.length" 
+             class="text-center py-8 text-gray-400 text-sm italic border-t border-gray-100 mt-8">
+            --- Đã hiển thị tất cả sản phẩm ---
+        </div>
+
       </main>
     </div>
   </div>
@@ -131,30 +137,9 @@
   <p-sidebar [(visible)]="mobileFilterVisible" position="right" styleClass="w-80">
      <div class="flex flex-col h-full">
          <h3 class="font-bold text-xl mb-6">Bộ lọc</h3>
-         <div class="flex-1 overflow-y-auto filter-scroll space-y-8 pr-2">
-             <div>
-                 <h4 class="font-semibold text-sm text-gray-700 mb-4 uppercase">Danh mục</h4>
-                 <div class="flex flex-col gap-3">
-                     <div *ngFor="let cat of categories" class="field-checkbox flex items-center gap-2">
-                         <p-checkbox name="groupMobile" [value]="cat.id" [(ngModel)]="selectedCategories" [inputId]="'m_'+cat.id"></p-checkbox>
-                         <label [for]="'m_'+cat.id" class="text-gray-600">{{ cat.name }}</label>
-                     </div>
-                 </div>
-             </div>
-             <div>
-                 <h4 class="font-semibold text-sm text-gray-700 mb-4 uppercase">Khoảng giá</h4>
-                 <div class="px-2 pt-2">
-                     <p-slider [(ngModel)]="priceRange" [range]="true" [min]="0" [max]="1000000" [step]="50000" styleClass="w-full"></p-slider>
-                 </div>
-                 <div class="flex justify-between mt-4 text-sm text-gray-600">
-                     <span>{{ priceRange[0] | currency:'VND':'symbol':'1.0-0' }}</span>
-                     <span>{{ priceRange[1] | currency:'VND':'symbol':'1.0-0' }}</span>
-                 </div>
-             </div>
-         </div>
-         <div class="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+         <div class="mt-4 pt-4 border-t border-gray-100 flex gap-3 mt-auto">
              <p-button label="Thiết lập lại" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="clearFilters()"></p-button>
-             <p-button label="Áp dụng" styleClass="w-full bg-pink-600 border-pink-600" (onClick)="filterProducts(); mobileFilterVisible=false"></p-button>
+             <p-button label="Áp dụng" styleClass="w-full bg-pink-600 border-pink-600" (onClick)="applyFilters(); mobileFilterVisible=false"></p-button>
          </div>
      </div>
   </p-sidebar>

@@ -1,0 +1,26 @@
+/* Mobile Stack View Styles */
+:host ::ng-deep {
+    @media screen and (max-width: 960px) {
+        .p-datatable.p-datatable-gridlines .p-datatable-tbody > tr > td {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: right;
+            border: 0 none;
+            padding: 0.75rem 1rem;
+            width: 100% !important;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .p-datatable-tbody > tr {
+            display: block;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        
+        .p-datatable-thead { display: none !important; }
+    }
+}

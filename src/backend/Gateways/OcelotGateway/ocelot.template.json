@@ -5,8 +5,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/login",
@@ -18,8 +18,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/register",
@@ -31,8 +31,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/refresh-token",
@@ -44,8 +44,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/logout",
@@ -57,8 +57,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/verify-email",
@@ -70,8 +70,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/auth/info",
@@ -84,8 +84,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/users/{everything}",
@@ -98,8 +98,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/products/{everything}",
@@ -110,8 +110,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/categories/{everything}",
@@ -122,8 +122,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/categories/{id}",
@@ -135,8 +135,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/categories",
@@ -149,8 +149,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/categories/{id}",
@@ -163,8 +163,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5002
+          "Host": "{{CATALOG_HOST}}",
+          "Port": {{CATALOG_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/products/{everything}",
@@ -177,8 +177,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5001
+          "Host": "{{BASKET_HOST}}",
+          "Port": {{BASKET_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/basket/{everything}",
@@ -191,8 +191,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5004
+          "Host": "{{ORDERING_HOST}}",
+          "Port": {{ORDERING_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/orders/{everything}",
@@ -204,8 +204,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5004
+          "Host": "{{ORDERING_HOST}}",
+          "Port": {{ORDERING_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/admin/orders/{everything}",
@@ -218,8 +218,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5003
+          "Host": "{{IDENTITY_HOST}}",
+          "Port": {{IDENTITY_PORT}}
         }
       ],
       "UpstreamPathTemplate": "/commons/{everything}",
@@ -227,6 +227,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000"
+    "BaseUrl": "{{OCELOT_BASE_URL}}"
   }
 }

@@ -1,34 +1,38 @@
 <p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
-<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
+<div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 flex-shrink-0">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 flex-shrink-0">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
             <p class="text-gray-500 text-sm mt-1">Theo dõi và xử lý đơn đặt hàng từ khách.</p>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-            <p-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="loadOrders()"
-                placeholder="Lọc theo trạng thái" [showClear]="true" styleClass="w-full sm:w-56"> </p-dropdown>
+            <p-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="onFilterChange()"
+                placeholder="Lọc theo trạng thái" [showClear]="true" 
+                styleClass="w-full sm:w-56"> 
+            </p-dropdown>
 
             <span class="p-input-icon-left w-full sm:w-64">
                 <i class="pi pi-search"></i>
-                <input pInputText type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadOrders()"
+                <input pInputText type="text" [(ngModel)]="searchTerm" (keyup.enter)="onFilterChange()"
                     placeholder="Tìm theo ID..." class="w-full" />
             </span>
         </div>
     </div>
 
-    <div class="flex-1 overflow-hidden">
-        <p-table [value]="orders" [lazy]="true" (onLazyLoad)="loadOrders($event)" [paginator]="true" [rows]="pageSize"
-            [totalRecords]="totalRecords" [loading]="isLoading" [rowsPerPageOptions]="[10, 20, 50]"
-            styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true" scrollHeight="flex"
-            [showCurrentPageReport]="true" currentPageReportTemplate="Hiển thị {first} - {last} của {totalRecords} đơn">
+    <div class="flex-1 overflow-auto relative" (scroll)="onScroll($event)">
+        
+        <p-table [value]="orders" 
+            [totalRecords]="totalRecords" 
+            [loading]="isLoading && orders.length === 0" 
+            styleClass="p-datatable-sm p-datatable-gridlines" 
+            responsiveLayout="stack" [breakpoint]="'960px'">
 
             <ng-template pTemplate="header">
-                <tr class="bg-gray-50">
+                <tr>
                     <th style="width: 140px">Mã đơn</th>
                     <th style="width: 160px">Ngày đặt</th>
                     <th style="width: 150px">Tổng tiền</th>
@@ -39,23 +43,34 @@
 
             <ng-template pTemplate="body" let-order>
                 <tr>
-                    <td style="width: 140px" class="font-bold text-blue-600 hover:underline cursor-pointer font-mono"
-                        (click)="viewOrder(order.id)" pTooltip="{{order.id}}" tooltipPosition="top">
-                        #{{ getShortId(order.id) }}
+                    <td>
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Mã đơn</span>
+                        <span class="font-bold text-blue-600 hover:underline cursor-pointer font-mono"
+                            (click)="viewOrder(order.id)">
+                            #{{ getShortId(order.id) }}
+                        </span>
                     </td>
 
-                    <td style="width: 160px">{{ order.orderDate | date:'dd/MM/yyyy HH:mm' }}</td>
-
-                    <td style="width: 150px" class="text-right font-bold text-gray-900">
-                        {{ order.totalPrice | currency:'VND':'symbol':'1.0-0' }}
+                    <td>
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Ngày đặt</span>
+                        {{ order.orderDate | date:'dd/MM/yyyy HH:mm' }}
                     </td>
 
-                    <td style="width: 150px" class="text-center">
+                    <td class="md:text-right">
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Tổng tiền</span>
+                        <span class="font-bold text-gray-900">
+                            {{ order.totalPrice | currency:'VND':'symbol':'1.0-0' }}
+                        </span>
+                    </td>
+
+                    <td class="md:text-center">
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Trạng thái</span>
                         <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"
                             [rounded]="true"></p-tag>
                     </td>
 
-                    <td style="width: 100px" class="text-center">
+                    <td class="md:text-center">
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Thao tác</span>
                         <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary"
                             (click)="viewOrder(order.id)"></button>
                     </td>
@@ -73,11 +88,29 @@
                 </tr>
             </ng-template>
         </p-table>
+
+        <div *ngIf="isLoading && orders.length > 0" class="py-4 text-center text-pink-600 bg-gray-50 border-t border-gray-100">
+            <i class="pi pi-spin pi-spinner text-2xl"></i>
+            <span class="ml-2 text-sm font-medium">Đang tải thêm...</span>
+        </div>
+        
+        <div *ngIf="isLastPage && orders.length > 0" class="py-4 text-center text-gray-400 text-sm italic">
+            --- Đã hiển thị tất cả đơn hàng ---
+        </div>
     </div>
 </div>
 
-<p-dialog [(visible)]="displayDialog" [header]="'Chi tiết đơn hàng #' + getShortId(selectedOrder?.id)" [modal]="true"
-    [style]="{width: '900px'}" [maximizable]="true" styleClass="p-fluid">
+<p-dialog [(visible)]="displayDialog" ... >
+   </p-dialog>
+
+<p-dialog [(visible)]="displayDialog" 
+    [header]="'Chi tiết #' + getShortId(selectedOrder?.id)" 
+    [modal]="true"
+    [breakpoints]="{'960px': '85vw', '640px': '100vw'}"
+    [style]="{width: '900px', maxWidth: '100vw', maxHeight: '100vh'}" 
+    [maximizable]="true" 
+    [draggable]="false"
+    styleClass="p-fluid">
 
     <div *ngIf="isLoadingDetail" class="p-8 text-center">
         <i class="pi pi-spin pi-spinner text-3xl text-pink-600"></i>
@@ -85,16 +118,18 @@
 
     <div *ngIf="!isLoadingDetail && selectedOrder" class="flex flex-col gap-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div>
                 <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <i class="pi pi-info-circle text-pink-600"></i> Thông tin chung
                 </h3>
                 <div class="space-y-2 text-sm">
-                    <p><span class="text-gray-500 w-24 inline-block">Order ID:</span>
-                        <span class="font-mono text-xs text-gray-600 select-all">{{ selectedOrder.id }}</span>
+                    <p class="flex flex-col sm:flex-row">
+                        <span class="text-gray-500 w-24 inline-block">Order ID:</span>
+                        <span class="font-mono text-xs text-gray-600 select-all break-all">{{ selectedOrder.id }}</span>
                     </p>
-                    <p><span class="text-gray-500 w-24 inline-block">Ngày đặt:</span>
+                    <p>
+                        <span class="text-gray-500 w-24 inline-block">Ngày đặt:</span>
                         <span>{{ selectedOrder.orderDate | date:'dd/MM/yyyy HH:mm' }}</span>
                     </p>
                     <div class="flex items-center">
@@ -104,24 +139,26 @@
                     </div>
                 </div>
             </div>
+
             <div>
                 <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <i class="pi pi-user text-pink-600"></i> Người nhận hàng
                 </h3>
                 <div class="space-y-2 text-sm">
-                    <p><span class="font-bold text-base">{{ selectedOrder.shippingAddress.receiverName || 'Khách vãng
-                            lai' }}</span></p>
+                    <p><span class="font-bold text-base">{{ selectedOrder.shippingAddress.receiverName || 'Khách vãng lai' }}</span></p>
                     <p class="flex items-center">
                         <i class="pi pi-phone text-gray-400 mr-2"></i>
-                        {{ selectedOrder.shippingAddress.phoneNumber || 'Không có SĐT' }}
+                        <a href="tel:{{selectedOrder.shippingAddress.phoneNumber}}" class="text-blue-600 hover:underline">
+                             {{ selectedOrder.shippingAddress.phoneNumber || '...' }}
+                        </a>
                     </p>
                     <p class="flex items-start">
                         <i class="pi pi-map-marker text-gray-400 mr-2 mt-1"></i>
-                        {{ selectedOrder.shippingAddress.fullAddress }}
+                        <span>{{ selectedOrder.shippingAddress.fullAddress }}</span>
                     </p>
                     <div *ngIf="selectedOrder.description"
                         class="mt-2 p-2 bg-yellow-50 border border-yellow-100 rounded text-yellow-800 text-xs italic">
-                        <i class="pi pi-comment mr-1"></i> Ghi chú: "{{ selectedOrder.description }}"
+                        <i class="pi pi-comment mr-1"></i> "{{ selectedOrder.description }}"
                     </div>
                 </div>
             </div>
@@ -129,37 +166,36 @@
 
         <div>
             <h3 class="font-bold text-gray-900 mb-3">Sản phẩm đặt mua</h3>
-            <p-table [value]="selectedOrder.orderItems"
+            <p-table [value]="selectedOrder.orderItems" responsiveLayout="scroll"
                 styleClass="p-datatable-sm border border-gray-200 rounded overflow-hidden">
                 <ng-template pTemplate="header">
                     <tr class="bg-gray-50 text-xs uppercase">
-                        <th>Sản phẩm</th>
-                        <th class="text-right">Đơn giá</th>
-                        <th class="text-center">SL</th>
-                        <th class="text-right">Thành tiền</th>
+                        <th style="min-width: 200px">Sản phẩm</th>
+                        <th class="text-right" style="min-width: 100px">Đơn giá</th>
+                        <th class="text-center" style="width: 50px">SL</th>
+                        <th class="text-right" style="min-width: 100px">Thành tiền</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-item>
                     <tr>
                         <td>
                             <div class="flex items-center gap-3">
-                                <img [src]="item.pictureUrl" class="w-10 h-10 object-cover rounded border bg-gray-100"
+                                <img [src]="item.pictureUrl" class="w-10 h-10 object-cover rounded border bg-gray-100 flex-shrink-0"
                                     onerror="this.src='https://placehold.co/40?text=No+Img'">
-                                <span class="font-medium text-sm">{{ item.productName }}</span>
+                                <span class="font-medium text-sm line-clamp-2">{{ item.productName }}</span>
                             </div>
                         </td>
                         <td class="text-right">{{ item.unitPrice | currency:'VND':'symbol':'1.0-0' }}</td>
                         <td class="text-center font-bold">{{ item.quantity }}</td>
-                        <td class="text-right font-medium">{{ item.unitPrice * item.quantity |
-                            currency:'VND':'symbol':'1.0-0' }}</td>
+                        <td class="text-right font-medium">{{ item.unitPrice * item.quantity | currency:'VND':'symbol':'1.0-0' }}</td>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="footer">
                     <tr>
-                        <td colspan="3" class="text-right font-bold text-gray-600 uppercase text-xs pt-4">Tổng tiền:
+                        <td colspan="3" class="text-right font-bold text-gray-600 uppercase text-xs pt-4">Tổng tiền:</td>
+                        <td class="text-right font-bold text-pink-600 text-xl pt-4 whitespace-nowrap">
+                            {{ selectedOrder.totalPrice | currency:'VND':'symbol':'1.0-0' }}
                         </td>
-                        <td class="text-right font-bold text-pink-600 text-xl pt-4">{{ selectedOrder.totalPrice |
-                            currency:'VND':'symbol':'1.0-0' }}</td>
                     </tr>
                 </ng-template>
             </p-table>
@@ -167,31 +203,34 @@
     </div>
 
     <ng-template pTemplate="footer">
-        <div class="flex justify-between w-full pt-4 border-t border-gray-100" *ngIf="selectedOrder">
+        <div class="flex flex-col-reverse md:flex-row justify-between w-full pt-4 border-t border-gray-100 gap-3" *ngIf="selectedOrder">
 
-            <div>
-                <button
-                    *ngIf="selectedOrder.status !== OrderStatus.Cancelled && selectedOrder.status !== OrderStatus.Completed"
-                    pButton label="Hủy đơn hàng" icon="pi pi-times" class="p-button-danger p-button-outlined"
+            <div class="w-full md:w-auto">
+                <button *ngIf="selectedOrder.status !== OrderStatus.Cancelled && selectedOrder.status !== OrderStatus.Completed"
+                    pButton label="Hủy đơn hàng" icon="pi pi-times" 
+                    class="p-button-danger p-button-outlined w-full md:w-auto"
                     (click)="changeStatus('cancel')"></button>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                
                 <button pButton label="Đóng" (click)="displayDialog = false"
-                    class="p-button-text text-gray-500"></button>
+                    class="p-button-text text-gray-500 w-full md:w-auto order-2 md:order-1"></button>
 
                 <button *ngIf="selectedOrder.status === OrderStatus.Pending" pButton label="Xác nhận & Xử lý"
-                    icon="pi pi-cog" class="bg-blue-600 border-blue-600" (click)="changeStatus('process')"></button>
+                    icon="pi pi-cog" class="bg-blue-600 border-blue-600 w-full md:w-auto order-1 md:order-2" 
+                    (click)="changeStatus('process')"></button>
 
                 <button *ngIf="selectedOrder.status === OrderStatus.Processing" pButton label="Giao hàng"
-                    icon="pi pi-truck" class="bg-purple-600 border-purple-600" (click)="changeStatus('ship')"></button>
+                    icon="pi pi-truck" class="bg-purple-600 border-purple-600 w-full md:w-auto order-1 md:order-2" 
+                    (click)="changeStatus('ship')"></button>
 
                 <button *ngIf="selectedOrder.status === OrderStatus.Shipping" pButton label="Hoàn thành đơn"
-                    icon="pi pi-check-circle" class="bg-green-600 border-green-600"
+                    icon="pi pi-check-circle" class="bg-green-600 border-green-600 w-full md:w-auto order-1 md:order-2"
                     (click)="changeStatus('complete')"></button>
 
                 <span *ngIf="selectedOrder.status === OrderStatus.Completed"
-                    class="flex items-center text-green-600 font-bold px-3">
+                    class="flex items-center justify-center text-green-600 font-bold px-3 py-2 md:py-0">
                     <i class="pi pi-check-circle mr-2"></i> Đã hoàn thành
                 </span>
             </div>

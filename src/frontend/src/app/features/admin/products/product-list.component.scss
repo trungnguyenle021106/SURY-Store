@@ -1,10 +1,32 @@
- :host ::ng-deep .p-image-preview-indicator {
-     opacity: 0;
- }
+// CSS này chỉ áp dụng khi màn hình nhỏ (do p-table kích hoạt chế độ stack)
+:host ::ng-deep {
+    @media screen and (max-width: 960px) {
+        .p-datatable {
+            &.p-datatable-gridlines .p-datatable-tbody > tr > td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between; // Đẩy tiêu đề sang trái, nội dung sang phải
+                text-align: right;
+                border: 0 none;
+                padding: 0.75rem 1rem;
+                width: 100% !important; // Bắt buộc full width từng dòng
+                border-bottom: 1px solid #f3f4f6;
+            }
 
- :host ::ng-deep .product-image {
-     width: 50px;
-     height: 50px;
-     object-fit: cover;
-     border-radius: 4px;
- }
+            // Tạo viền đậm phân cách giữa các "Thẻ" (mỗi row là 1 thẻ)
+            .p-datatable-tbody > tr {
+                display: block; // Biến row thành block
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                margin-bottom: 1rem; // Khoảng cách giữa các thẻ
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            }
+        }
+    }
+
+    // Chỉnh nút trong table to hơn chút trên mobile để dễ ấn
+    .p-button.p-button-rounded {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+}

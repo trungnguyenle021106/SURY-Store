@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 // PrimeNG Modules
@@ -10,9 +10,9 @@ import { SliderModule } from 'primeng/slider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SidebarModule } from 'primeng/sidebar';
 import { TagModule } from 'primeng/tag';
-import { PaginatorModule } from 'primeng/paginator';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+// BỎ: import { PaginatorModule } from 'primeng/paginator'; -> Không dùng nữa
 
 // Data & Models
 import { Category, Product } from '../../core/models/catalog.models';
@@ -22,10 +22,11 @@ import { finalize } from 'rxjs/internal/operators/finalize';
 
 @Component({
   selector: 'app-catalog',
+  standalone: true,
   imports: [
     CommonModule, RouterLink, FormsModule,
     ButtonModule, DropdownModule, SliderModule, CheckboxModule,
-    SidebarModule, TagModule, PaginatorModule, TooltipModule, SkeletonModule
+    SidebarModule, TagModule, TooltipModule, SkeletonModule
   ],
   templateUrl: './catalog.component.html',
   styles: [`
@@ -38,16 +39,17 @@ export class CatalogComponent implements OnInit {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
 
-  // Data
-  products: Product[] = [];        
-  featuredProducts: Product[] = []; 
+  // --- DATA ---
+  rawProducts: Product[] = [];        // Dữ liệu gốc từ API
+  allFilteredProducts: Product[] = []; // Dữ liệu sau khi lọc (Category, Price, Sort)
+  displayProducts: Product[] = [];     // Dữ liệu đang hiển thị trên màn hình (được cắt ra từ allFilteredProducts)
+  
   categories: Category[] = [];
 
-  // Filter States
+  // --- FILTER STATES ---
   selectedCategories: string[] = [];
   priceRange: number[] = [0, 1000000];
-  keyword: string = ''; // Thêm biến keyword
-
+  keyword: string = '';
   sortOptions = [
     { label: 'Mới nhất', value: 'newest' },
     { label: 'Giá: Thấp đến Cao', value: 'price_asc' },
@@ -55,131 +57,140 @@ export class CatalogComponent implements OnInit {
   ];
   selectedSort: string = 'newest';
 
-  // UI States
-  isLoadingProducts = true; 
+  // --- UI STATES ---
+  isLoadingInit = true;      // Loading lần đầu vào trang
+  isLoadingMore = false;     // Loading khi cuộn xuống dưới
   isLoadingCategories = true;
-  
   mobileFilterVisible = false;
-  totalRecords = 0;
-  first = 0;
-  rows = 8;
+  
+  // --- INFINITE SCROLL CONFIG ---
+  itemsPerBatch = 12; // Số lượng load thêm mỗi lần cuộn
+  currentIndex = 0;   // Vị trí cắt hiện tại
 
   ngOnInit(): void {
     this.loadCategories();
     
-    // Lắng nghe URL thay đổi để load lại dữ liệu
     this.route.queryParams.subscribe(params => {
-      this.keyword = params['keyword'] || ''; // Lấy keyword từ URL
-      
+      this.keyword = params['keyword'] || '';
       if (params['categoryId']) {
         this.selectedCategories = [params['categoryId']];
-      } else {
-        // Nếu không có categoryId trên URL thì reset (trừ khi bạn muốn giữ state)
-        // this.selectedCategories = []; 
       }
-      
-      // Load sản phẩm dựa trên keyword (nếu có)
-      this.loadFeaturedProducts(this.keyword);
+      this.loadDataFromApi(this.keyword);
     });
   }
 
-  // Cập nhật hàm này để nhận keyword
-  loadFeaturedProducts(searchKeyword: string = '') {
-    this.isLoadingProducts = true;
-    
-    // Gọi API với keyword. Giả sử getProducts hỗ trợ tham số thứ 3 là keyword
-    // Nếu API bạn là getProducts(page, size, keyword)
-    this.productService.getProducts(1, 100, searchKeyword) 
+  // 1. Tải dữ liệu gốc từ API
+  loadDataFromApi(searchKeyword: string = '') {
+    this.isLoadingInit = true;
+    // Giả sử lấy 100 sản phẩm để lọc client-side
+    this.productService.getProducts(1, 100, searchKeyword)
       .pipe(finalize(() => {
-         // Loading sẽ được tắt trong filterProducts
+         // Loading tắt ở filterProducts
       }))
       .subscribe({
         next: (response: any) => {
-          if (response.products && Array.isArray(response.products.data)) {
-            this.featuredProducts = response.products.data;
-          } else if (response.data && Array.isArray(response.data)) {
-             // Fallback nếu response trả về trực tiếp data (tùy cấu trúc API)
-             this.featuredProducts = response.data;
-          } else {
-            this.featuredProducts = [];
-          }
-          // Chạy filter client-side trên tập dữ liệu vừa lấy về
-          this.filterProducts();
+          // Xử lý response tùy cấu trúc API của bạn
+          const data = response.products?.data || response.data || [];
+          this.rawProducts = Array.isArray(data) ? data : [];
+          
+          // Sau khi có dữ liệu, chạy bộ lọc ngay
+          this.applyFilters();
         },
         error: (err) => {
-            console.error('Lỗi tải sản phẩm:', err);
-            this.featuredProducts = [];
-            this.isLoadingProducts = false;
+          console.error(err);
+          this.rawProducts = [];
+          this.isLoadingInit = false;
         }
       });
   }
 
   loadCategories() {
     this.isLoadingCategories = true;
-    this.categoryService.getCategories(1, 100) // Lấy nhiều hơn để hiện đủ filter
+    this.categoryService.getCategories(1, 100)
       .pipe(finalize(() => this.isLoadingCategories = false))
       .subscribe({
-        next: (response: any) => {
-          if (response.categories && Array.isArray(response.categories.data)) {
-            this.categories = response.categories.data;
-          } else if (response.data) {
-             this.categories = response.data;
-          } else {
-            this.categories = [];
-          }
-        },
-        error: (err) => console.error('Lỗi tải danh mục:', err)
+        next: (res: any) => this.categories = res.categories?.data || res.data || [],
+        error: (err) => console.error(err)
       });
   }
 
-  filterProducts() {
-    this.isLoadingProducts = true; 
+  // 2. Logic Lọc & Sắp xếp (Core Logic)
+  applyFilters() {
+    this.isLoadingInit = true;
 
-    // Simulate delay for client-side filtering effect
+    // Giả lập delay nhỏ để UI mượt hơn
     setTimeout(() => {
-      let result = [...this.featuredProducts];
+      let result = [...this.rawProducts];
 
-      // 1. Filter Category
+      // Filter Category
       if (this.selectedCategories.length > 0) {
         result = result.filter(p => this.selectedCategories.includes(p.categoryId));
       }
 
-      // 2. Filter Price
+      // Filter Price
       result = result.filter(p => p.price >= this.priceRange[0] && p.price <= this.priceRange[1]);
 
-      // 3. Sort
+      // Sort
       if (this.selectedSort === 'price_asc') {
         result.sort((a, b) => a.price - b.price);
       } else if (this.selectedSort === 'price_desc') {
         result.sort((a, b) => b.price - a.price);
       }
 
-      this.totalRecords = result.length;
-
-      // 4. Pagination
-      const start = this.first;
-      const end = this.first + this.rows;
-      this.products = result.slice(start, end);
-
-      this.isLoadingProducts = false; 
+      // Cập nhật mảng kết quả lọc
+      this.allFilteredProducts = result;
+      
+      // Reset Scroll: Hiển thị batch đầu tiên
+      this.resetScroll();
+      
+      this.isLoadingInit = false;
     }, 300);
   }
 
-  onPageChange(event: any) {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.filterProducts();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 3. Reset trạng thái hiển thị (khi đổi bộ lọc)
+  resetScroll() {
+    this.currentIndex = 0;
+    this.displayProducts = [];
+    this.appendItems(); // Load batch đầu tiên
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu
+  }
+
+  // 4. Cắt dữ liệu từ mảng lọc bỏ vào mảng hiển thị
+  appendItems() {
+    if (this.currentIndex >= this.allFilteredProducts.length) return;
+
+    const nextIndex = this.currentIndex + this.itemsPerBatch;
+    const batch = this.allFilteredProducts.slice(this.currentIndex, nextIndex);
+    
+    this.displayProducts = [...this.displayProducts, ...batch];
+    this.currentIndex = nextIndex;
+  }
+
+  // 5. Bắt sự kiện cuộn trang (Window Scroll)
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    // Nếu đang loading hoặc đã hiển thị hết thì dừng
+    if (this.isLoadingInit || this.isLoadingMore || this.displayProducts.length >= this.allFilteredProducts.length) {
+      return;
+    }
+
+    // Tính toán vị trí cuộn: (Chiều cao nội dung - Chiều cao màn hình)
+    // Nếu cuộn gần tới đáy (còn 200px)
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+      this.isLoadingMore = true;
+      
+      // Giả lập delay loading thêm (để hiện skeleton cho đẹp)
+      setTimeout(() => {
+        this.appendItems();
+        this.isLoadingMore = false;
+      }, 500);
+    }
   }
 
   clearFilters() {
     this.selectedCategories = [];
     this.priceRange = [0, 1000000];
-    // Không clear keyword ở đây nếu bạn muốn giữ kết quả tìm kiếm nhưng bỏ bộ lọc giá/danh mục
-    // Nếu muốn clear cả tìm kiếm:
-    // this.keyword = ''; 
-    // this.router.navigate([], { queryParams: {} }); 
-    this.filterProducts();
+    this.applyFilters();
   }
 
   getInventoryStatus(product: Product) {

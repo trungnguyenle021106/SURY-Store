@@ -31,7 +31,7 @@ import { Observable } from 'rxjs';
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     TableModule, ButtonModule, InputTextModule, InputTextarea, InputNumberModule,
-    DropdownModule, DialogModule, ToastModule, TagModule, ImageModule, ConfirmDialogModule, 
+    DropdownModule, DialogModule, ToastModule, TagModule, ImageModule, ConfirmDialogModule,
     TooltipModule, RadioButtonModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -47,7 +47,7 @@ export class ProductListComponent implements OnInit {
 
   // --- DATA ---
   products: Product[] = [];
-  categories: Category[] = []; 
+  categories: Category[] = [];
   totalRecords = 0;
   isLoading = false;
 
@@ -56,6 +56,7 @@ export class ProductListComponent implements OnInit {
   pageSize = 10;
   keyword = '';
   selectedCategoryId: string | null = null; // Thêm biến để lọc category
+  isLastPage = false;
 
   // --- UTILS ---
   ProductStatus = ProductStatus;
@@ -95,7 +96,7 @@ export class ProductListComponent implements OnInit {
 
   ngOnInit(): void {
     // Load categories trước để map tên, sau đó mới load products
-    this.loadCategoriesForDropdown(); 
+    this.loadCategoriesForDropdown();
   }
 
   // 1. Load Categories
@@ -103,53 +104,80 @@ export class ProductListComponent implements OnInit {
     this.categoryService.getCategories(1, 100).subscribe((res: any) => {
       // Handle cấu trúc response tùy biến của bạn
       this.categories = res.categories ? res.categories.data : [];
-      
+
       // Sau khi có categories thì mới load products để map tên
       this.loadProducts();
     });
   }
 
   // 2. Load Products
- loadProducts(event?: any, isForceRefresh: boolean = false) {
+  loadProducts(event?: any, isForceRefresh: boolean = false, isAppend: boolean = false) {
+    if (this.isLoading) return; // Chặn nếu đang tải để tránh gọi trùng
+
     this.isLoading = true;
-    if (event) {
-      this.currentPage = (event.first / event.rows) + 1;
-      this.pageSize = event.rows;
+
+    // Nếu không phải là nối tiếp (tức là lọc, search, hoặc refresh), reset lại từ đầu
+    if (!isAppend) {
+      this.currentPage = 1;
+      this.products = []; // Xóa sạch dữ liệu cũ
+      this.isLastPage = false;
     }
 
-    // Gọi Service: Truyền thêm tham số thứ 7 là isForceRefresh
+    // Gọi API
     this.productService.getProducts(
-        this.currentPage, 
-        this.pageSize, 
-        this.keyword, 
-        this.selectedCategoryId || undefined, 
-        undefined, 
-        true,          // includeDrafts (Admin luôn cần xem nháp)
-        isForceRefresh // <--- Tham số bypassCache mới
-    )
-      .subscribe({
-        next: (res: any) => {
-          this.products = res.products.data;
-          this.totalRecords = res.products.count;
-          this.isLoading = false;
+      this.currentPage,
+      this.pageSize,
+      this.keyword,
+      this.selectedCategoryId || undefined,
+      undefined,
+      true,
+      isForceRefresh
+    ).subscribe({
+      next: (res: any) => {
+        const newProducts = res.products.data;
 
-          // Nếu là force refresh thì hiển thị thông báo cho admin biết
-          if (isForceRefresh) {
-             this.messageService.add({ severity: 'success', summary: 'Đã làm mới', detail: 'Dữ liệu đã được cập nhật trực tiếp từ Database' });
-          }
-        },
-        error: () => {
-          this.isLoading = false;
-          this.products = [];
-          this.messageService.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải dữ liệu' });
+        // Logic quan trọng: Nối mảng cũ + mới
+        if (isAppend) {
+          this.products = [...this.products, ...newProducts];
+        } else {
+          this.products = newProducts;
         }
-      });
+
+        this.totalRecords = res.products.count;
+
+        // Kiểm tra xem đã hết dữ liệu chưa
+        if (this.products.length >= this.totalRecords || newProducts.length === 0) {
+          this.isLastPage = true;
+        }
+
+        this.isLoading = false;
+
+        if (isForceRefresh) {
+          this.messageService.add({ severity: 'success', summary: 'Đã làm mới', detail: 'Dữ liệu cập nhật' });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        // ... handle error
+      }
+    });
+  }
+
+  onScroll(event: any) {
+    // Nếu đang tải hoặc đã hết trang thì dừng
+    if (this.isLoading || this.isLastPage) return;
+
+    const element = event.target;
+    // Kiểm tra nếu cuộn gần tới đáy (còn 50px nữa là tới)
+    if (element.offsetHeight + element.scrollTop >= element.scrollHeight - 50) {
+      this.currentPage++; // Tăng trang lên
+      this.loadProducts(null, false, true); // Gọi hàm với cờ isAppend = true
+    }
   }
 
   // 2. THÊM HÀM refreshData (Gắn vào nút bấm)
   refreshData() {
-    // Gọi loadProducts với tham số true để ép bỏ qua cache
-    this.loadProducts(null, true);
+    this.loadProducts(null, true, false);
   }
 
   // Helper: Lấy tên danh mục từ ID
@@ -176,7 +204,7 @@ export class ProductListComponent implements OnInit {
       description: product.description,
       imageUrl: product.imageUrl,
       categoryId: product.categoryId,
-      quantity: product.quantity 
+      quantity: product.quantity
     });
     this.displayDialog = true;
   }
@@ -236,16 +264,16 @@ export class ProductListComponent implements OnInit {
     const payload = { quantity: quantity };
 
     // Chọn API dựa trên Action
-    const request$ = action === 'add' 
+    const request$ = action === 'add'
       ? this.productService.addStock(productId, payload)
       : this.productService.removeStock(productId, payload);
 
     request$.subscribe({
       next: () => {
-        this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Thành công', 
-            detail: action === 'add' ? `Đã nhập thêm ${quantity} sản phẩm` : `Đã giảm ${quantity} sản phẩm`
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: action === 'add' ? `Đã nhập thêm ${quantity} sản phẩm` : `Đã giảm ${quantity} sản phẩm`
         });
         this.displayStockDialog = false;
         this.isSaving = false;
@@ -265,7 +293,7 @@ export class ProductListComponent implements OnInit {
     const isCurrentlyActive = product.status === ProductStatus.Active;
     // Nếu đang là OutOfStock, cũng coi như cần active lại (nhưng thực tế nên nhập kho)
     // Logic ở đây: Nếu Active -> Discontinue. Nếu Anything else -> Active.
-    
+
     const actionLabel = isCurrentlyActive ? 'Ngừng kinh doanh' : 'Mở bán lại';
     const actionVerb = isCurrentlyActive ? 'ngừng kinh doanh' : 'mở bán lại';
 
