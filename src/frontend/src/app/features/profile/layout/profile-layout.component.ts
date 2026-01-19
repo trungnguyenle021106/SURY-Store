@@ -43,6 +43,10 @@ export class ProfileLayoutComponent implements OnInit {
     return user?.fullName || 'Khách hàng';
   }
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   onLogout() {
     this.authService.logout().subscribe();
   }

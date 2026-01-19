@@ -10,14 +10,15 @@ export class ProductService {
     private http = inject(HttpClient);
     private baseUrl = `${environment.apiUrl}/products`;
 
-  getProducts(
+    getProducts(
         pageNumber: number = 1,
         pageSize: number = 10,
         keyword?: string,
         categoryId?: string,
         excludeId?: string,
         includeDrafts: boolean = false,
-        bypassCache: boolean = false 
+        bypassCache: boolean = false,
+        status?: number // <--- 1. Thêm tham số status (dùng number hoặc Enum)
     ): Observable<ProductListResponse> {
 
         let params = new HttpParams()
@@ -25,7 +26,7 @@ export class ProductService {
             .set('pageSize', pageSize)
             .set('includeDrafts', includeDrafts);
 
-        // 2. Logic xử lý Bypass Cache
+        // Logic xử lý Bypass Cache
         if (bypassCache) {
             params = params.set('bypassCache', 'true');
         }
@@ -39,6 +40,12 @@ export class ProductService {
 
         if (excludeId) {
             params = params.set('excludeId', excludeId);
+        }
+
+        // 2. Logic xử lý lọc theo Status
+        // Kiểm tra !== null và !== undefined để tránh lỗi nếu status là 0 (ví dụ Enum 0)
+        if (status !== undefined && status !== null) {
+            params = params.set('status', status.toString());
         }
 
         return this.http.get<ProductListResponse>(this.baseUrl, { params });

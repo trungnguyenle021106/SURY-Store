@@ -8,8 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 // =========================================================================
 // 1. LOAD BIẾN MÔI TRƯỜNG
 // =========================================================================
-// Load file .env (Lùi ra 3 cấp thư mục như code của bạn: src/backend/Gateways/Ocelot -> src)
-Env.Load("../../../.env");
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
+
+if (File.Exists(envPath))
+{
+    // Nếu chạy Local -> Load file .env
+    Env.Load(envPath);
+    Console.WriteLine($"✅ Loaded .env file from: {envPath}");
+}
+else
+{
+    // Nếu chạy Docker -> Không cần load file, Docker Compose đã tự bơm biến vào rồi
+    Console.WriteLine("⚠️ .env file not found. Using System Environment Variables (Docker Mode).");
+}
 
 string GetEnv(string key, string defaultValue = "") =>
     Environment.GetEnvironmentVariable(key) ?? defaultValue;

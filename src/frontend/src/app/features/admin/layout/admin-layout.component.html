@@ -12,7 +12,8 @@
     </nav>
 
     <div class="p-4 border-t border-slate-800">
-      <button class="flex items-center gap-2 text-slate-400 hover:text-white w-full transition-colors" (click)="logout()">
+      <button class="flex items-center gap-2 text-slate-400 hover:text-white w-full transition-colors"
+        (click)="logout()">
         <i class="pi pi-sign-out"></i> Đăng xuất
       </button>
     </div>
@@ -20,28 +21,29 @@
 
   <p-drawer [(visible)]="sidebarVisible" styleClass="!bg-slate-900 !text-white !border-r-slate-800 !w-64">
     <ng-template pTemplate="header">
-        <span class="text-xl font-bold tracking-widest text-white">
-            SURY<span class="text-pink-500">.</span>ADMIN
-        </span>
+      <span class="text-xl font-bold tracking-widest text-white">
+        SURY<span class="text-pink-500">.</span>ADMIN
+      </span>
     </ng-template>
-    
+
     <div class="flex flex-col h-full">
-        <nav class="flex-1 py-4">
-             <ng-container *ngTemplateOutlet="menuContent"></ng-container>
-        </nav>
-        
-        <div class="p-4 border-t border-slate-800 mt-auto">
-            <button class="flex items-center gap-2 text-slate-400 hover:text-white w-full transition-colors" (click)="logout()">
-              <i class="pi pi-sign-out"></i> Đăng xuất
-            </button>
-        </div>
+      <nav class="flex-1 py-4">
+        <ng-container *ngTemplateOutlet="menuContent"></ng-container>
+      </nav>
+
+      <div class="p-4 border-t border-slate-800 mt-auto">
+        <button class="flex items-center gap-2 text-slate-400 hover:text-white w-full transition-colors"
+          (click)="logout()">
+          <i class="pi pi-sign-out"></i> Đăng xuất
+        </button>
+      </div>
     </div>
   </p-drawer>
 
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
     <header class="h-16 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-6">
-      
+
       <button class="md:hidden text-gray-600 focus:outline-none" (click)="sidebarVisible = true">
         <i class="pi pi-bars text-xl"></i>
       </button>
@@ -65,56 +67,67 @@
 </div>
 
 <ng-template #menuContent>
-    <ul class="space-y-1 px-2">
-        <li>
-          <a routerLink="/admin/dashboard" routerLinkActive="bg-pink-600 text-white shadow-md"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-            (click)="sidebarVisible = false"> <i class="pi pi-home"></i>
-            <span class="font-medium">Tổng quan</span>
-          </a>
-        </li>
+  <ul class="space-y-1 px-2">
+    <li>
+      <a routerLink="/"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg text-emerald-400 hover:bg-slate-800 hover:text-emerald-300 transition-all font-bold mb-1"
+        (click)="sidebarVisible = false">
+        <i class="pi pi-arrow-left"></i>
+        <span>Về trang chủ</span>
+      </a>
+    </li>
+    
+    <li>
+      <a routerLink="/admin/dashboard" routerLinkActive="bg-pink-600 text-white shadow-md"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+        (click)="sidebarVisible = false"> <i class="pi pi-home"></i>
+        <span class="font-medium">Tổng quan</span>
+      </a>
+    </li>
 
-        <li class="mt-4 mb-2 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          Sản phẩm
-        </li>
-        <li>
-          <a routerLink="/admin/categories" routerLinkActive="bg-pink-600 text-white shadow-md"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-            (click)="sidebarVisible = false">
-            <i class="pi pi-list"></i>
-            <span class="font-medium">Danh mục</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/admin/products" routerLinkActive="bg-pink-600 text-white shadow-md"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-            (click)="sidebarVisible = false">
-            <i class="pi pi-tag"></i>
-            <span class="font-medium">Sản phẩm</span>
-          </a>
-        </li>
+    <li class="mt-4 mb-2 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+      Sản phẩm
+    </li>
+    <li>
+      <a routerLink="/admin/categories" routerLinkActive="bg-pink-600 text-white shadow-md"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+        (click)="sidebarVisible = false">
+        <i class="pi pi-list"></i>
+        <span class="font-medium">Danh mục</span>
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/products" routerLinkActive="bg-pink-600 text-white shadow-md"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+        (click)="sidebarVisible = false">
+        <i class="pi pi-tag"></i>
+        <span class="font-medium">Sản phẩm</span>
+      </a>
+    </li>
 
-        <li class="mt-4 mb-2 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          Bán hàng
-        </li>
-        <li>
-          <a routerLink="/admin/orders" routerLinkActive="bg-pink-600 text-white shadow-md"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-            (click)="sidebarVisible = false">
-            <i class="pi pi-shopping-cart"></i>
-            <span class="font-medium">Đơn hàng</span>
-          </a>
-        </li>
-        <li>
-          <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-slate-500 cursor-not-allowed bg-transparent opacity-60 select-none">
-            <div class="flex items-center gap-3">
-              <i class="pi pi-users"></i>
-              <span class="font-medium">Khách hàng</span>
-            </div>
-            <span class="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600">
-              Soon
-            </span>
-          </div>
-        </li>
-      </ul>
+    <li class="mt-4 mb-2 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+      Bán hàng
+    </li>
+    <li>
+      <a routerLink="/admin/orders" routerLinkActive="bg-pink-600 text-white shadow-md"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+        (click)="sidebarVisible = false">
+        <i class="pi pi-shopping-cart"></i>
+        <span class="font-medium">Đơn hàng</span>
+      </a>
+    </li>
+    <li>
+      <div
+        class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-slate-500 cursor-not-allowed bg-transparent opacity-60 select-none">
+        <div class="flex items-center gap-3">
+          <i class="pi pi-users"></i>
+          <span class="font-medium">Khách hàng</span>
+        </div>
+        <span
+          class="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600">
+          Soon
+        </span>
+      </div>
+    </li>
+  </ul>
 </ng-template>

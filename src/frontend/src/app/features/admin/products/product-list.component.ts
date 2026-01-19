@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 
-// PrimeNG
+// PrimeNG Imports
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -55,7 +55,19 @@ export class ProductListComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   keyword = '';
-  selectedCategoryId: string | null = null; // Thêm biến để lọc category
+  selectedCategoryId: string | null = null;
+  
+  // [CẬP NHẬT] Biến filter trạng thái
+  selectedStatus: number | null = null;
+  
+  // [CẬP NHẬT] Mảng options status lấy đúng theo file Utils của bạn
+  statusOptions = [
+      { label: ProductStatusLabel[ProductStatus.Active], value: ProductStatus.Active },       // Đang bán
+      { label: ProductStatusLabel[ProductStatus.OutOfStock], value: ProductStatus.OutOfStock }, // Hết hàng
+      { label: ProductStatusLabel[ProductStatus.Discontinued], value: ProductStatus.Discontinued }, // Ngừng bán
+      { label: ProductStatusLabel[ProductStatus.Draft], value: ProductStatus.Draft }          // Nháp
+  ];
+
   isLastPage = false;
 
   // --- UTILS ---
@@ -63,80 +75,71 @@ export class ProductListComponent implements OnInit {
   getStatusLabel = (s: number) => ProductStatusLabel[s];
   getStatusSeverity = (s: number) => ProductStatusSeverity[s];
 
-  // --- PRODUCT DIALOG (Create/Edit) ---
+  // --- PRODUCT DIALOG ---
   displayDialog = false;
   isEditMode = false;
   currentId: string | null = null;
   isSaving = false;
   productForm: FormGroup;
 
-  // --- STOCK DIALOG (Manage Quantity) ---
+  // --- STOCK DIALOG ---
   displayStockDialog = false;
   stockProduct: Product | null = null;
   stockForm: FormGroup;
 
   constructor() {
-    // Form chính sản phẩm
     this.productForm = this.fb.group({
       name: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       description: [''],
       imageUrl: [''],
       categoryId: [null, Validators.required],
-      quantity: [{ value: 0, disabled: true }] // Chỉ hiển thị, không sửa ở đây
+      quantity: [{ value: 0, disabled: true }]
     });
 
-    // Form quản lý kho
     this.stockForm = this.fb.group({
-      action: ['add', Validators.required], // 'add' hoặc 'remove'
+      action: ['add', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      note: [''] // Ghi chú nhập/xuất (nếu cần mở rộng sau này)
+      note: ['']
     });
   }
 
   ngOnInit(): void {
-    // Load categories trước để map tên, sau đó mới load products
     this.loadCategoriesForDropdown();
   }
 
-  // 1. Load Categories
   loadCategoriesForDropdown() {
     this.categoryService.getCategories(1, 100).subscribe((res: any) => {
-      // Handle cấu trúc response tùy biến của bạn
       this.categories = res.categories ? res.categories.data : [];
-
-      // Sau khi có categories thì mới load products để map tên
       this.loadProducts();
     });
   }
 
-  // 2. Load Products
   loadProducts(event?: any, isForceRefresh: boolean = false, isAppend: boolean = false) {
-    if (this.isLoading) return; // Chặn nếu đang tải để tránh gọi trùng
+    if (this.isLoading) return;
 
     this.isLoading = true;
 
-    // Nếu không phải là nối tiếp (tức là lọc, search, hoặc refresh), reset lại từ đầu
     if (!isAppend) {
       this.currentPage = 1;
-      this.products = []; // Xóa sạch dữ liệu cũ
+      this.products = [];
       this.isLastPage = false;
     }
 
-    // Gọi API
+    // [QUAN TRỌNG] Truyền this.selectedStatus vào API
     this.productService.getProducts(
       this.currentPage,
       this.pageSize,
       this.keyword,
       this.selectedCategoryId || undefined,
-      undefined,
-      true,
-      isForceRefresh
+      undefined, 
+      true, // Mặc định includeDrafts = true để nếu lọc status=Draft thì vẫn hiện
+      isForceRefresh,
+      this.selectedStatus !== null ? this.selectedStatus : undefined 
     ).subscribe({
       next: (res: any) => {
         const newProducts = res.products.data;
 
-        // Logic quan trọng: Nối mảng cũ + mới
         if (isAppend) {
           this.products = [...this.products, ...newProducts];
         } else {
@@ -145,7 +148,6 @@ export class ProductListComponent implements OnInit {
 
         this.totalRecords = res.products.count;
 
-        // Kiểm tra xem đã hết dữ liệu chưa
         if (this.products.length >= this.totalRecords || newProducts.length === 0) {
           this.isLastPage = true;
         }
@@ -158,35 +160,28 @@ export class ProductListComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
-        // ... handle error
       }
     });
   }
 
   onScroll(event: any) {
-    // Nếu đang tải hoặc đã hết trang thì dừng
     if (this.isLoading || this.isLastPage) return;
 
     const element = event.target;
-    // Kiểm tra nếu cuộn gần tới đáy (còn 50px nữa là tới)
     if (element.offsetHeight + element.scrollTop >= element.scrollHeight - 50) {
-      this.currentPage++; // Tăng trang lên
-      this.loadProducts(null, false, true); // Gọi hàm với cờ isAppend = true
+      this.currentPage++;
+      this.loadProducts(null, false, true);
     }
   }
 
-  // 2. THÊM HÀM refreshData (Gắn vào nút bấm)
   refreshData() {
     this.loadProducts(null, true, false);
   }
 
-  // Helper: Lấy tên danh mục từ ID
   getCategoryName(id: string): string {
     const cat = this.categories.find(c => c.id === id);
     return cat ? cat.name : '---';
   }
-
-  // --- CRUD PRODUCT ---
 
   openNew() {
     this.isEditMode = false;
@@ -238,7 +233,7 @@ export class ProductListComponent implements OnInit {
         this.messageService.add({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu sản phẩm' });
         this.displayDialog = false;
         this.isSaving = false;
-        this.loadProducts(); // Reload table
+        this.loadProducts();
       },
       error: () => {
         this.isSaving = false;
@@ -247,11 +242,9 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // --- STOCK MANAGEMENT (NEW FEATURE) ---
-
   openStockDialog(product: Product) {
     this.stockProduct = product;
-    this.stockForm.reset({ action: 'add', quantity: 10 }); // Default nhập 10 cái
+    this.stockForm.reset({ action: 'add', quantity: 10 });
     this.displayStockDialog = true;
   }
 
@@ -263,7 +256,6 @@ export class ProductListComponent implements OnInit {
     const productId = this.stockProduct.id;
     const payload = { quantity: quantity };
 
-    // Chọn API dựa trên Action
     const request$ = action === 'add'
       ? this.productService.addStock(productId, payload)
       : this.productService.removeStock(productId, payload);
@@ -277,7 +269,7 @@ export class ProductListComponent implements OnInit {
         });
         this.displayStockDialog = false;
         this.isSaving = false;
-        this.loadProducts(); // Reload để cập nhật số lượng và trạng thái (OutOfStock -> Active)
+        this.loadProducts();
       },
       error: (err) => {
         this.isSaving = false;
@@ -287,18 +279,12 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // --- CHANGE STATUS ---
-
   toggleStatus(product: Product) {
     const isCurrentlyActive = product.status === ProductStatus.Active;
-    // Nếu đang là OutOfStock, cũng coi như cần active lại (nhưng thực tế nên nhập kho)
-    // Logic ở đây: Nếu Active -> Discontinue. Nếu Anything else -> Active.
-
-    const actionLabel = isCurrentlyActive ? 'Ngừng kinh doanh' : 'Mở bán lại';
-    const actionVerb = isCurrentlyActive ? 'ngừng kinh doanh' : 'mở bán lại';
+    const actionLabel = isCurrentlyActive ? 'ngừng bán' : 'mở bán lại'; // Update theo từ ngữ trong Utils
 
     this.confirmationService.confirm({
-      message: `Bạn có chắc muốn ${actionVerb} sản phẩm "${product.name}"?`,
+      message: `Bạn có chắc muốn ${actionLabel} sản phẩm "${product.name}"?`,
       header: 'Xác nhận trạng thái',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Đồng ý',

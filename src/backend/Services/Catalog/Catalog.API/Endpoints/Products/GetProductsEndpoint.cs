@@ -32,7 +32,8 @@ namespace Catalog.API.Endpoints.Products
                 [FromQuery] Guid? categoryId,
                 [FromQuery] Guid? excludeId,
                 [FromQuery] bool? includeDrafts,
-                [FromQuery] bool? bypassCache, // <--- 2. Nhận từ Query String
+                [FromQuery] bool? bypassCache,
+                [FromQuery] ProductStatus? status, // <--- 2. Nhận từ Query String
                 ISender sender) =>
             {
                 var query = new GetProductsQuery(
@@ -42,7 +43,8 @@ namespace Catalog.API.Endpoints.Products
                     categoryId,
                     excludeId,
                     includeDrafts ?? false,
-                    bypassCache ?? false // <--- 3. Truyền vào Query
+                    bypassCache ?? false,
+                    status // <--- 3. Truyền vào Query
                 );
 
                 var result = await sender.Send(query);

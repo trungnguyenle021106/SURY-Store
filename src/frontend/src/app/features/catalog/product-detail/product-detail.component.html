@@ -22,8 +22,9 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2 leading-tight">{{ product.name }}</h1>
 
             <div class="flex items-center gap-4 mb-6">
-                <span class="text-2xl font-bold text-pink-600">{{ product.price | currency:'VND':'symbol':'1.0-0'
-                    }}</span>
+                <span class="text-2xl font-bold text-pink-600">
+                    {{ product.price | currency:'VND':'symbol':'1.0-0' }}
+                </span>
                 <div class="h-5 w-[1px] bg-gray-300"></div>
                 <p-tag [value]="inventoryStatus.label" [severity]="inventoryStatus.severity" [rounded]="true"></p-tag>
             </div>
@@ -35,36 +36,46 @@
                 </p>
             </div>
 
-            <div class="mt-auto border-t border-gray-100 pt-6" *ngIf="product.quantity > 0">
+            <div class="mt-auto border-t border-gray-100 pt-6">
 
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Số lượng
-                    <span class="text-gray-500 font-normal ml-1">
-                        (Có sẵn: <span class="font-semibold text-gray-800">{{ product.quantity }}</span> sản phẩm)
-                    </span>
-                </label>
+                <ng-container *ngIf="product.quantity > 0; else outOfStockTemplate">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Số lượng
+                        <span class="text-gray-500 font-normal ml-1">
+                            (Có sẵn: <span class="font-semibold text-gray-800">{{ product.quantity }}</span> sản phẩm)
+                        </span>
+                    </label>
 
-                <div class="flex gap-4">
-                    <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal"
-                        inputId="horizontal" spinnerMode="horizontal" [step]="1" [min]="1"
-                        inputStyleClass="w-16 text-center font-bold border-gray-300 text-gray-900"
-                        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus">
-                    </p-inputNumber>
+                    <div class="flex gap-4">
+                        <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal"
+                            inputId="horizontal" spinnerMode="horizontal" [step]="1" [min]="1"
+                            inputStyleClass="w-16 text-center font-bold border-gray-300 text-gray-900"
+                            incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus">
+                        </p-inputNumber>
 
-                    <button pButton label="Thêm vào giỏ hàng" icon="pi pi-shopping-bag"
-                        class="flex-1 p-button-lg bg-pink-600 border-pink-600 hover:bg-pink-700 hover:border-pink-700 shadow-md"
-                        (click)="addToCart()">
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400 mt-3 flex items-center gap-1">
-                    <i class="pi pi-info-circle"></i> Kiểm tra hàng kỹ trước khi nhận.
-                </p>
-            </div>
+                        <button pButton label="Thêm vào giỏ hàng" icon="pi pi-shopping-bag"
+                            class="flex-1 p-button-lg bg-pink-600 border-pink-600 hover:bg-pink-700 hover:border-pink-700 shadow-md"
+                            (click)="addToCart()">
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-3 flex items-center gap-1">
+                        <i class="pi pi-info-circle"></i> Kiểm tra hàng kỹ trước khi nhận.
+                    </p>
+                </ng-container>
 
-            <div *ngIf="product.quantity === 0"
-                class="mt-4 p-4 bg-gray-100 rounded-lg text-gray-500 text-center border border-gray-200">
-                <i class="pi pi-exclamation-circle text-xl mb-2 block"></i>
-                Sản phẩm này tạm thời đang hết hàng. Vui lòng quay lại sau.
+                <ng-template #outOfStockTemplate>
+                    <div class="flex flex-col gap-3">
+                        <div class="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2 border border-red-100">
+                             <i class="pi pi-exclamation-circle text-lg"></i>
+                             <span>Sản phẩm này tạm thời đang hết hàng.</span>
+                        </div>
+                        
+                        <button pButton label="Hết hàng" icon="pi pi-ban" [disabled]="true"
+                            class="w-full p-button-lg p-button-secondary opacity-60 cursor-not-allowed">
+                        </button>
+                    </div>
+                </ng-template>
+
             </div>
 
         </div>
@@ -73,7 +84,6 @@
     <div class="mt-16 border-t border-gray-100 pt-10">
         <h2 class="text-xl font-bold text-gray-900">Sản phẩm khác</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
             <div *ngFor="let item of relatedProducts" class="group cursor-pointer" [routerLink]="['/catalog', item.id]">
                 <div class="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
                     <img [src]="item.imageUrl"
@@ -88,7 +98,6 @@
                 <h3 class="font-medium text-gray-800 text-sm truncate group-hover:text-pink-600">{{ item.name }}</h3>
                 <span class="text-sm font-bold text-gray-900">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</span>
             </div>
-
         </div>
     </div>
 </div>

@@ -2,32 +2,33 @@
 FROM node:20-alpine as build
 WORKDIR /app
 
-# Copy file package để cài thư viện
-COPY package.json package-lock.json ./
-
-# Dùng npm ci để cài đặt chính xác version trong lock file
+# (Phần copy package giữ nguyên)
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
-# Copy toàn bộ code
-COPY . .
+# (Phần copy code giữ nguyên)
+COPY frontend/ .
+COPY .env ../.env 
+
+ARG APP_MODE
+ARG CLOUD_API_URL
+
+# Gán ARG vào ENV để các script (như set-env.js hoặc npm build) có thể đọc được qua process.env
+ENV APP_MODE=$APP_MODE
+ENV CLOUD_API_URL=$CLOUD_API_URL
+
+# Cài dotenv và chạy script
+RUN npm install dotenv
+RUN node set-env.js 
+# ========================================================
 
 ARG ENV_CONFIG=production
-
-# Thay đổi dòng build để nhận biến
 RUN npm run build -- --configuration=$ENV_CONFIG
 
 # --- GIAI ĐOẠN 2: CHẠY APP ---
 FROM nginx:alpine
-
-# Xóa config mặc định
 RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy config nginx tùy chỉnh
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# [QUAN TRỌNG] Copy file build vào thư mục của Nginx
-# Dựa trên angular.json của bạn: dist/frontend/browser
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

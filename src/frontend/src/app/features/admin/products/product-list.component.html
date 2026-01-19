@@ -4,13 +4,55 @@
 <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
 
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4 flex-shrink-0">
-         </div>
+
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
+            <p class="text-gray-500 text-sm mt-1">Quản lý danh sách, giá bán và tồn kho.</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-2 w-full lg:w-auto">
+            <p-dropdown [options]="categories" [(ngModel)]="selectedCategoryId" optionLabel="name" optionValue="id"
+                [showClear]="true" placeholder="Danh mục" (onChange)="loadProducts()" class="w-full md:w-40"
+                appendTo="body"></p-dropdown>
+
+            <p-dropdown [options]="statusOptions" [(ngModel)]="selectedStatus" optionLabel="label" optionValue="value"
+                [showClear]="true" placeholder="Trạng thái" (onChange)="loadProducts()" class="w-full md:w-40"
+                appendTo="body" styleClass="w-full">
+
+                <ng-template pTemplate="selectedItem" let-selected>
+                    <div class="flex align-items-center gap-2" *ngIf="selected">
+                        <p-tag [value]="selected.label" [severity]="getStatusSeverity(selected.value)"
+                            styleClass="text-xs"></p-tag>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="item" let-item>
+                    <div class="flex align-items-center gap-2">
+                        <p-tag [value]="item.label" [severity]="getStatusSeverity(item.value)"
+                            styleClass="text-xs"></p-tag>
+                    </div>
+                </ng-template>
+            </p-dropdown>
+
+            <span class="p-input-icon-left w-full md:w-56">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" [(ngModel)]="keyword" (keyup.enter)="loadProducts()"
+                    placeholder="Tìm tên sản phẩm..." class="w-full" />
+            </span>
+
+            <button pButton icon="pi pi-sync" class="p-button-outlined p-button-secondary"
+                pTooltip="Làm mới & Xóa Cache" tooltipPosition="bottom" (click)="refreshData()">
+            </button>
+
+            <button pButton label="Thêm mới" icon="pi pi-plus" class="bg-pink-600 border-pink-600"
+                (click)="openNew()"></button>
+        </div>
+    </div>
 
     <div class="flex-1 overflow-y-auto relative" (scroll)="onScroll($event)" #scrollContainer>
-        
-        <p-table [value]="products" [lazy]="true"
-            [totalRecords]="totalRecords" [loading]="isLoading && products.length === 0" 
-            styleClass="p-datatable-sm p-datatable-gridlines" 
+
+        <p-table [value]="products" [lazy]="true" [totalRecords]="totalRecords"
+            [loading]="isLoading && products.length === 0" styleClass="p-datatable-sm p-datatable-gridlines"
             responsiveLayout="stack" [breakpoint]="'960px'">
 
             <ng-template pTemplate="header">
@@ -53,22 +95,29 @@
                     </td>
                     <td class="md:text-center">
                         <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Kho hàng</span>
-                         <div class="inline-flex md:flex items-center justify-center gap-2">
-                            <span [class.text-red-500]="product.quantity < 5" [class.font-bold]="product.quantity === 0">
+                        <div class="inline-flex md:flex items-center justify-center gap-2">
+                            <span [class.text-red-500]="product.quantity < 5"
+                                [class.font-bold]="product.quantity === 0">
                                 {{ product.quantity }}
                             </span>
-                            <button pButton icon="pi pi-box" class="p-button-rounded p-button-text p-button-secondary w-8 h-8 md:w-6 md:h-6" (click)="openStockDialog(product)"></button>
+                            <button pButton icon="pi pi-box"
+                                class="p-button-rounded p-button-text p-button-secondary w-8 h-8 md:w-6 md:h-6"
+                                (click)="openStockDialog(product)"></button>
                         </div>
                     </td>
                     <td class="md:text-center">
                         <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Trạng thái</span>
-                        <p-tag [value]="getStatusLabel(product.status)" [severity]="getStatusSeverity(product.status)"></p-tag>
+                        <p-tag [value]="getStatusLabel(product.status)"
+                            [severity]="getStatusSeverity(product.status)"></p-tag>
                     </td>
                     <td class="md:text-center">
-                         <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Thao tác</span>
-                         <div class="flex md:justify-center gap-2">
-                            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-outlined p-button-warning" (click)="editProduct(product)"></button>
-                            <button pButton [icon]="product.status === ProductStatus.Active ? 'pi pi-ban' : 'pi pi-check-circle'"
+                        <span class="p-column-title font-bold min-w-[100px] inline-block md:hidden">Thao tác</span>
+                        <div class="flex md:justify-center gap-2">
+                            <button pButton icon="pi pi-pencil"
+                                class="p-button-rounded p-button-outlined p-button-warning"
+                                (click)="editProduct(product)"></button>
+                            <button pButton
+                                [icon]="product.status === ProductStatus.Active ? 'pi pi-ban' : 'pi pi-check-circle'"
                                 class="p-button-rounded p-button-outlined"
                                 [ngClass]="product.status === ProductStatus.Active ? 'p-button-danger' : 'p-button-success'"
                                 (click)="toggleStatus(product)"></button>
@@ -78,82 +127,92 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-               <tr><td colspan="7" class="text-center py-10">Không có dữ liệu</td></tr>
+                <tr>
+                    <td colspan="7" class="text-center py-10">Không có dữ liệu</td>
+                </tr>
             </ng-template>
         </p-table>
 
-        <div *ngIf="isLoading && products.length > 0" class="py-4 text-center text-pink-600 bg-gray-50 border-t border-gray-100">
+        <div *ngIf="isLoading && products.length > 0"
+            class="py-4 text-center text-pink-600 bg-gray-50 border-t border-gray-100">
             <i class="pi pi-spin pi-spinner text-2xl"></i>
             <span class="ml-2 text-sm font-medium">Đang tải thêm...</span>
         </div>
-        
+
         <div *ngIf="isLastPage && products.length > 0" class="py-4 text-center text-gray-400 text-sm italic">
             --- Đã hiển thị tất cả sản phẩm ---
         </div>
     </div>
 </div>
 
-<p-dialog [(visible)]="displayDialog" 
-    [header]="isEditMode ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'" 
-    [modal]="true"
-    [breakpoints]="{'960px': '75vw', '640px': '95vw'}" 
-    [style]="{width: '800px', maxWidth: '100vw'}" 
-    [maximizable]="true" 
-    [draggable]="false" 
-    styleClass="p-fluid">
+<p-dialog [(visible)]="displayDialog" [header]="isEditMode ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'" [modal]="true"
+    [breakpoints]="{'960px': '75vw', '640px': '95vw'}" [style]="{width: '800px', maxWidth: '100vw'}"
+    [maximizable]="true" [draggable]="false" styleClass="p-fluid">
 
     <form [formGroup]="productForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
         <div class="flex flex-col gap-5">
             <div class="field">
-                <label class="font-medium text-gray-900 block mb-2">Tên sản phẩm <span class="text-red-500">*</span></label>
+                <label class="font-medium text-gray-900 block mb-2">Tên sản phẩm <span
+                        class="text-red-500">*</span></label>
                 <input pInputText formControlName="name" placeholder="Ví dụ: Váy hoa nhí" />
-                <small *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched" class="text-red-500 block mt-1">Bắt buộc nhập.</small>
+                <small *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched"
+                    class="text-red-500 block mt-1">Bắt buộc nhập.</small>
             </div>
+
             <div class="field">
                 <label class="font-medium text-gray-900 block mb-2">Danh mục <span class="text-red-500">*</span></label>
-                <p-dropdown [options]="categories" formControlName="categoryId" optionLabel="name" optionValue="id" placeholder="Chọn danh mục" appendTo="body" [filter]="true"></p-dropdown>
+                <p-dropdown [options]="categories" formControlName="categoryId" optionLabel="name" optionValue="id"
+                    placeholder="Chọn danh mục" appendTo="body" [filter]="true"></p-dropdown>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                 <div class="field">
-                    <label class="font-medium text-gray-900 block mb-2">Giá bán</label>
-                    <p-inputNumber formControlName="price" mode="currency" currency="VND" locale="vi-VN"></p-inputNumber>
-                 </div>
-                 <div class="field">
-                    <label class="font-medium text-gray-900 block mb-2">Tồn kho</label>
-                    <p-inputNumber formControlName="quantity" [disabled]="isEditMode"></p-inputNumber>
-                 </div>
+
+            <div class="field">
+                <label class="font-medium text-gray-900 block mb-2">Giá bán</label>
+                <p-inputNumber formControlName="price" mode="currency" currency="VND" locale="vi-VN"></p-inputNumber>
+            </div>
+
+            <div class="field">
+                <label class="font-medium text-gray-900 block mb-2">Tồn kho</label>
+                <p-inputNumber formControlName="quantity" [disabled]="true"></p-inputNumber>
+
+                <small class="text-blue-500 mt-1 block flex items-center gap-1">
+                    <i class="pi pi-info-circle"></i>Dùng chức năng <b>Kho</b> để nhập/xuất
+                    thêm.
+                </small>
             </div>
         </div>
+
         <div class="flex flex-col gap-4">
-             <div class="field">
+            <div class="field">
                 <label class="font-medium text-gray-900 block mb-2">Link Hình ảnh</label>
                 <input pInputText formControlName="imageUrl" />
                 <div class="mt-2 h-32 bg-gray-50 rounded border border-dashed flex items-center justify-center">
-                    <img *ngIf="productForm.get('imageUrl')?.value" [src]="productForm.get('imageUrl')?.value" class="h-full object-contain" />
+                    <img *ngIf="productForm.get('imageUrl')?.value" [src]="productForm.get('imageUrl')?.value"
+                        class="h-full object-contain" />
                 </div>
-             </div>
-             <div class="field flex-grow">
+            </div>
+            <div class="field flex-grow">
                 <label class="font-medium text-gray-900 block mb-2">Mô tả</label>
                 <textarea pInputTextarea formControlName="description" rows="3" class="w-full"></textarea>
-             </div>
+            </div>
         </div>
     </form>
 
     <ng-template pTemplate="footer">
-        <button pButton label="Hủy" icon="pi pi-times" (click)="displayDialog = false" class="p-button-text text-gray-500"></button>
-        <button pButton label="Lưu lại" icon="pi pi-check" (click)="saveProduct()" class="bg-pink-600 border-pink-600" [loading]="isSaving"></button>
+        <button pButton label="Hủy" icon="pi pi-times" (click)="displayDialog = false"
+            class="p-button-text text-gray-500"></button>
+        <button pButton label="Lưu lại" icon="pi pi-check" (click)="saveProduct()" class="bg-pink-600 border-pink-600"
+            [loading]="isSaving"></button>
     </ng-template>
 </p-dialog>
 
-<p-dialog [(visible)]="displayStockDialog" header="Quản lý kho hàng" [modal]="true" 
-    [breakpoints]="{'960px': '50vw', '640px': '90vw'}"
-    [style]="{width: '400px'}"
-    styleClass="p-fluid">
-    
+<p-dialog [(visible)]="displayStockDialog" header="Quản lý kho hàng" [modal]="true"
+    [breakpoints]="{'960px': '50vw', '640px': '90vw'}" [style]="{width: '400px'}" styleClass="p-fluid">
+
     <div *ngIf="stockProduct" class="mb-4 text-center">
         <h3 class="font-bold text-lg text-gray-900">{{ stockProduct.name }}</h3>
         <p class="text-sm">Tồn kho: <b class="text-blue-600">{{ stockProduct.quantity }}</b></p>
     </div>
+
     <form [formGroup]="stockForm" class="flex flex-col gap-4">
         <div class="field">
             <div class="flex gap-4 justify-center">
@@ -162,20 +221,23 @@
                     <label for="act_add" class="ml-2 cursor-pointer text-green-600 font-bold">Nhập (+)</label>
                 </div>
                 <div class="flex items-center">
-                    <p-radioButton name="action" value="remove" formControlName="action" inputId="act_remove"></p-radioButton>
+                    <p-radioButton name="action" value="remove" formControlName="action"
+                        inputId="act_remove"></p-radioButton>
                     <label for="act_remove" class="ml-2 cursor-pointer text-red-600 font-bold">Xuất (-)</label>
                 </div>
             </div>
         </div>
         <div class="field">
             <p-inputNumber formControlName="quantity" [min]="1" [showButtons]="true" buttonLayout="horizontal"
-                inputStyleClass="text-center font-bold" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus">
+                inputStyleClass="text-center font-bold" incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus">
             </p-inputNumber>
         </div>
     </form>
+
     <ng-template pTemplate="footer">
         <button pButton label="Hủy" (click)="displayStockDialog = false" class="p-button-text"></button>
-        <button pButton label="Xác nhận" (click)="saveStock()" 
-        [class]="stockForm.get('action')?.value === 'add' ? 'bg-green-600 border-green-600' : 'bg-red-600 border-red-600'"></button>
+        <button pButton label="Xác nhận" (click)="saveStock()"
+            [class]="stockForm.get('action')?.value === 'add' ? 'bg-green-600 border-green-600' : 'bg-red-600 border-red-600'"></button>
     </ng-template>
 </p-dialog>
